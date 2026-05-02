@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    healthcheck: # ตรวจสอบว่า DB พร้อมรับแขกหรือยัง
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${DB_EXTERNAL_PORT}:5432"
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy # รอจนกว่า db จะ Healthy จริงๆ
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    environment:
+      # ใช้ชื่อ service "backend" เพื่อคุยกันภายในวง Network ของ Docker
+      BACKEND_URL: http://backend:8080/api/v1/tasks
+    depends_on:
+      - backend
