@@ -53,3 +53,14 @@ func (ctrl *TodoController) ToggleStatus(c *gin.Context) {
     
     c.JSON(200, gin.H{"message": "สลับสถานะงานเรียบร้อยแล้ว"})
 }
+
+func (ctrl *TodoController) Delete(c *gin.Context) {
+    id, _ := strconv.Atoi(c.Param("id"))
+    
+    if err := ctrl.svc.DeleteTask(uint(id)); err != nil {
+        c.JSON(500, gin.H{"error": "ไม่สามารถลบงานได้"})
+        return
+    }
+    
+    c.JSON(200, gin.H{"message": "ลบงานเรียบร้อยแล้ว"})
+}

@@ -22,41 +22,59 @@ const toggleCounter = new client.Counter({
   name: 'todo_tasks_toggled_total',
   help: 'Total number of times tasks were toggled',
 });
+const deleteCounter = new client.Counter({
+  name: 'todo_tasks_deleted_total',
+  help: 'Total number of tasks deleted via frontend',
+});
+
+register.registerMetric(taskCounter);
 register.registerMetric(toggleCounter);
+register.registerMetric(deleteCounter);
 
 // URL ของ Go Backend (ปรับตามความจริงของคุณ)
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080/api/v1/tasks';
 
+// Helper Function สำหรับสร้าง HTML ของแต่ละรายการ (รักษา Style เดิม)
+const renderTask = (t) => `
+    <li style="margin-bottom: 15px; list-style: none; padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+                    <!-- ส่วนของปุ่ม Toggle State -->
+                    <form method="POST" action="/toggle/${t.id}">
+                <button type="submit" style="background: none; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; padding: 5px 10px; font-size: 1.2rem;">
+                    ${t.status === 'completed' ? '🫒' : '⬜'} 
+                </button>
+            </form>
+            
+            <div style="flex-grow: 1;">
+                <strong style="font-size: 1.1rem; ${t.status === 'completed' ? 'text-decoration: line-through; color: #888;' : ''}">
+                    ${t.title}
+                </strong>
+                <br>
+                <span style="color: #666;">${t.description || 'ไม่มีคำอธิบาย'}</span>
+                        <br>
+                        <small style="color: #aaa;">สถานะ: ${t.status} | สร้างเมื่อ: ${new Date(t.created_at).toLocaleString()}</small>
+            </div>
+        </div>
+
+        <!-- เพิ่มปุ่มลบ (Delete) -->
+        <form method="POST" action="/delete/${t.id}" style="margin: 0;" onsubmit="return confirm('ลบงานนี้ใช่ไหม?')">
+            <button type="submit" style="background: #800020; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
+                ลบ
+            </button>
+        </form>
+    </li>
+`;
+
 // --- 2. Routes ---
 
-// หน้าแรก: แสดงรายการ To-Do และฟอร์มเพิ่มงาน
 app.get('/', async (req, res) => {
     try {
         const response = await axios.get(BACKEND_URL);
         const tasks = response.data || [];
 
-        let taskListHtml = tasks.map(t => `
-            <li style="margin-bottom: 15px; list-style: none; padding: 10px; border-bottom: 1px solid #eee;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <!-- ส่วนของปุ่ม Toggle State -->
-                    <form method="POST" action="/toggle/${t.id}">
-                        <button type="submit" style="background: none; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; padding: 5px 10px; font-size: 1.2rem;">
-                            ${t.status === 'completed' ? '🫒' : '⬜'} 
-                        </button>
-                    </form>
-                    
-                    <div style="flex-grow: 1;">
-                        <strong style="font-size: 1.1rem; ${t.status === 'completed' ? 'text-decoration: line-through; color: #888;' : ''}">
-                            ${t.title}
-                        </strong>
-                        <br>
-                        <span style="color: #666;">${t.description || 'ไม่มีคำอธิบาย'}</span>
-                        <br>
-                        <small style="color: #aaa;">สถานะ: ${t.status} | สร้างเมื่อ: ${new Date(t.created_at).toLocaleString()}</small>
-                    </div>
-                </div>
-            </li>
-        `).join('');
+        // แยกงานตามสถานะ
+        const pendingTasks = tasks.filter(t => t.status !== 'completed');
+        const completedTasks = tasks.filter(t => t.status === 'completed');
 
         res.send(`
             <div style="max-width: 600px; margin: 50px auto; font-family: Arial, sans-serif;">
@@ -76,9 +94,16 @@ app.get('/', async (req, res) => {
 
                 <hr>
                 
-                <!-- รายการ Task -->
+                <!-- ส่วนของงานที่ยังไม่เสร็จ -->
+                <h3 style="color: #708238;">📌 รายการที่ต้องทำ</h3>
                 <ul style="padding: 0;">
-                    ${taskListHtml.length > 0 ? taskListHtml : '<p style="color: #999;">ยังไม่มีงานในรายการ...</p>'}
+                    ${pendingTasks.length > 0 ? pendingTasks.map(renderTask).join('') : '<p style="color: #999;">เย้! ไม่มีงานค้างแล้ว</p>'}
+                </ul>
+
+                <!-- ส่วนของงานที่เสร็จแล้ว (เพิ่มใหม่) -->
+                <h3 style="color: #888; margin-top: 30px;">✅ สำเร็จแล้ว</h3>
+                <ul style="padding: 0; opacity: 0.7;">
+                    ${completedTasks.length > 0 ? completedTasks.map(renderTask).join('') : '<p style="color: #999;">ยังไม่มีงานที่เสร็จสมบูรณ์</p>'}
                 </ul>
 
                 <div style="margin-top: 30px; padding: 10px; background: #e9ecef; border-radius: 5px; text-align: center;">
@@ -90,7 +115,7 @@ app.get('/', async (req, res) => {
         `);
     } catch (err) {
         console.error("Error fetching tasks:", err.message);
-        res.status(500).send('<h1>Error</h1><p>ไม่สามารถเชื่อมต่อกับ Go Backend ได้ กรุณาตรวจสอบว่า Backend รันอยู่ที่พอร์ต 8080</p>');
+        res.status(500).send('<h1>Error</h1><p>ไม่สามารถเชื่อมต่อกับ Go Backend ได้</p>');
     }
 });
 
@@ -114,9 +139,17 @@ app.post('/add', async (req, res) => {
 // ไฟล์ app.js ในโฟลเดอร์ frontend
 app.post('/toggle/:id', async (req, res) => {
     try {
-        const taskId = req.params.id;
-        // เปลี่ยนจาก /done เป็น /toggle ให้ตรงกับ Backend
-        await axios.patch(`${BACKEND_URL}/${taskId}/toggle`); 
+        await axios.patch(`${BACKEND_URL}/${req.params.id}/toggle`); 
+        toggleCounter.inc();
+        res.redirect('/');
+    } catch (err) { res.status(500).send('ไม่สามารถสลับสถานะได้'); }
+});
+
+// Endpoint สำหรับลบงาน (เพิ่มใหม่)
+app.post('/delete/:id', async (req, res) => {
+    try {
+        await axios.delete(`${BACKEND_URL}/${req.params.id}`);
+        deleteCounter.inc();
         res.redirect('/');
     } catch (err) {
         res.status(500).send('ไม่สามารถสลับสถานะได้');

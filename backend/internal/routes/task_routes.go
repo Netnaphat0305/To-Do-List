@@ -22,6 +22,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB) {
         api.GET("/tasks", ctrl.List)
         api.POST("/tasks", ctrl.Create)
         api.PATCH("/tasks/:id/toggle", ctrl.ToggleStatus)
+        api.DELETE("/tasks/:id", ctrl.Delete)
     }
     
 }

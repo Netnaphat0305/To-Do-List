@@ -11,6 +11,7 @@ type TaskService interface {
 	AddTask(req dto.TaskRequest) error
 	ListTasks() ([]dto.TaskResponse, error)
 	ToggleTaskStatus(id uint) error
+	DeleteTask(id uint) error
 }
 
 type taskService struct {
@@ -67,4 +68,8 @@ func (s *taskService) ToggleTaskStatus(id uint) error {
 
     // 3. สั่ง Repository บันทึกค่าที่สลับแล้วลง Database
     return s.repo.Update(task)
+}
+
+func (s *taskService) DeleteTask(id uint) error {
+	return s.repo.Delete(id)
 }
