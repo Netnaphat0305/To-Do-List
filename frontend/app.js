@@ -58,7 +58,7 @@ const renderTask = (t) => `
 
         <!-- เพิ่มปุ่มลบ (Delete) -->
         <form method="POST" action="/delete/${t.id}" style="margin: 0;" onsubmit="return confirm('ลบงานนี้ใช่ไหม?')">
-            <button type="submit" style="background: #800020; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
+            <button type="submit" style="background: #f39bbd; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
                 ลบ
             </button>
         </form>
@@ -86,7 +86,7 @@ app.get('/', async (req, res) => {
                     <form method="POST" action="/add">
                         <input type="text" name="title" placeholder="หัวข้อ (เช่น เตรียมสอบ Cloud)" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
                         <textarea name="description" placeholder="รายละเอียด..." style="width: 100%; padding: 8px; margin-bottom: 10px;"></textarea>
-                        <button type="submit" style="background: #708238; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                        <button type="submit" style="background: #788b59; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
                             Add Task
                         </button>
                     </form>
@@ -95,19 +95,19 @@ app.get('/', async (req, res) => {
                 <hr>
                 
                 <!-- ส่วนของงานที่ยังไม่เสร็จ -->
-                <h3 style="color: #708238;">📌 รายการที่ต้องทำ</h3>
+                <h3 style="color: #788b59;">🪷 รายการที่ต้องทำ</h3>
                 <ul style="padding: 0;">
                     ${pendingTasks.length > 0 ? pendingTasks.map(renderTask).join('') : '<p style="color: #999;">เย้! ไม่มีงานค้างแล้ว</p>'}
                 </ul>
 
                 <!-- ส่วนของงานที่เสร็จแล้ว (เพิ่มใหม่) -->
-                <h3 style="color: #888; margin-top: 30px;">✅ สำเร็จแล้ว</h3>
+                <h3 style="color: #888; margin-top: 30px;">🍵 สำเร็จแล้ว</h3>
                 <ul style="padding: 0; opacity: 0.7;">
                     ${completedTasks.length > 0 ? completedTasks.map(renderTask).join('') : '<p style="color: #999;">ยังไม่มีงานที่เสร็จสมบูรณ์</p>'}
                 </ul>
 
                 <div style="margin-top: 30px; padding: 10px; background: #e9ecef; border-radius: 5px; text-align: center;">
-                    <a href="/metrics" target="_blank" style="color: #007bff; text-decoration: none; font-weight: bold;">
+                    <a href="/metrics" target="_blank" style="color: #f4c1d0; text-decoration: none; font-weight: semi-bold;">
                         ดูระบบ Monitoring (Metrics)
                     </a>
                 </div>
