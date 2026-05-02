@@ -1,7 +1,6 @@
-# 🚀 [ชื่อโปรเจค] — ENG23 3074
+# 🚀 To-Do List — ENG23 3074
 
-> _อธิบายโปรเจคสั้น ๆ ในประโยคเดียว_  
-> **ตัวอย่าง:** ระบบ API บันทึกโน้ต สร้างด้วย Python Flask containerize ด้วย Docker และ deploy บน Kubernetes ผ่าน Jenkins pipeline แบบอัตโนมัติ
+>  เว็ป To-Do-List สร้างด้วย Golang และ Node.js containerize ด้วย Docker และ deploy บน Kubernetes ผ่าน Jenkins pipeline แบบอัตโนมัติ
 
 ---
 
@@ -9,10 +8,10 @@
 
 | รหัสนักศึกษา | ชื่อ-นามสกุล | ความรับผิดชอบ |
 |-------------|-------------|---------------|
-| 6XXXXXXX | ชื่อ นามสกุล | Git, App Development |
-| 6XXXXXXX | ชื่อ นามสกุล | Jenkins, Docker |
-| 6XXXXXXX | ชื่อ นามสกุล | Terraform, Ansible |
-| 6XXXXXXX | ชื่อ นามสกุล | Kubernetes, Monitoring |
+| B6608019 | นาวสาวเนตรนภัทร ชำนินอก | Git, App Development |
+| B6609023 | นายณัฐสิทธิ์ มามั่น | Jenkins, Docker |
+| B6639334 | นางสาวพิมพ์นารา อดุลจันทรศร | Terraform |
+| B6643041 | นางสาวพนิดา โต๊ะเหลือ | Kubernetes, Monitoring |
 
 ---
 
@@ -21,8 +20,8 @@
 ### แอปพลิเคชัน
 - **ชื่อ:** [ชื่อแอป]
 - **ประเภท:** [เช่น REST API / Web App]
-- **ภาษา / Framework:** [เช่น Python Flask / Node.js Express]
-- **คำอธิบาย:** [อธิบาย 2–3 ประโยคว่าแอปทำอะไร ใช้แก้ปัญหาอะไร]
+- **ภาษา / Framework:** [Go / Node.js Express]
+- **คำอธิบาย:** เว็ปนี้ใช้สำหรับบันทึกรายการที่ต้องทำ เพื่อป้องกันการลืมในสิ่งที่ต้องทำในชีวิตประจำวัน
 
 ### Architecture Diagram
 ```
@@ -314,5 +313,5 @@ curl http://localhost:5000/metrics
 ## 📄 ข้อมูลการส่งงาน
 
 - วิชา: **ENG23 3074 — Serverless and Cloud Architectures**
-- อาจารย์ผู้สอน: **ดร. นันทวุฒิ เกาะกุ้ง (AFHEA)**
+- อาจารย์ผู้สอน: **ดร. นันทวุฒิ คะอังกุ (AFHEA)**
 - ภาควิชาวิศวกรรมคอมพิวเตอร์
