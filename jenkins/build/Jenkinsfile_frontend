@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USER  = 'YOUR_DOCKERHUB_USERNAME'
+        DOCKERHUB_USER  = 'nattasitfluk'
         IMAGE_NAME      = "${DOCKERHUB_USER}/todo-frontend"
         IMAGE_TAG       = "${BUILD_NUMBER}"
     }
@@ -26,7 +26,7 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-credentials',
+                    credentialsId: 'docker-hub-credentials',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
