@@ -1,49 +1,35 @@
 pipeline {
     agent any
-
     environment {
         DOCKERHUB_USER = 'nattasitfluk'
-        IMAGE_NAME      = "${DOCKERHUB_USER}/todo-backend"
-        IMAGE_TAG       = "${BUILD_NUMBER}"
+        IMAGE_NAME     = "${DOCKERHUB_USER}/todo-backend"
+        IMAGE_TAG      = "${BUILD_NUMBER}"
+        // ID ต้องตรงกับที่ตั้งใน Jenkins Credentials
+        DOCKER_CREDS   = 'docker-hub-credentials' 
     }
 
     stages {
-
-        stage('Checkout') {
+        stage('1. Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Test') {
-            steps {
-                dir('backend') {
-                    sh 'go test ./... || true'
-                }
-            }
-        }
+        // หมายเหตุ: ตัด stage Test ออกก่อนหากในเครื่องไม่มี Go 
+        // หรือจะรัน Test ภายใต้ Docker Container ก็ได้ครับ
 
-        stage('Build Docker Image') {
+        stage('2. Build & Push to Docker Hub') {
             steps {
-                dir('backend') {
-                    sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
-                }
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'docker-hub-credentials',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
-                        docker push ${IMAGE_NAME}:latest
-                    '''
+                script {
+                    // ใช้ docker.withRegistry เพื่อจัดการเรื่อง Login อัตโนมัติ
+                    docker.withRegistry('', "${DOCKER_CREDS}") {
+                        // สั่ง build โดยชี้ไปที่โฟลเดอร์ backend
+                        def backendImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}", "./backend")
+                        
+                        // Push ทั้งแบบระบุเลข Build และแบบ latest
+                        backendImage.push()
+                        backendImage.push("latest")
+                    }
                 }
             }
         }
@@ -54,10 +40,10 @@ pipeline {
             echo '✅ Backend Build & Push สำเร็จ!'
         }
         failure {
-            echo '❌ Backend Build ล้มเหลว กรุณาตรวจสอบ logs'
+            echo '❌ Backend Build ล้มเหลว'
         }
         always {
-            sh 'docker image prune -f || true'
+            cleanWs() // ล้างพื้นที่หลังจบงาน
         }
     }
 }
