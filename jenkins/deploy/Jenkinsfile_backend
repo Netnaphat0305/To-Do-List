@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_USER  = 'YOUR_DOCKERHUB_USERNAME'
+        IMAGE_NAME      = "${DOCKERHUB_USER}/todo-backend"
+        IMAGE_TAG       = 'latest'
+        NAMESPACE       = 'todo-app'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Deploy Backend to Kubernetes') {
+            steps {
+                sh '''
+                    kubectl apply -f k8s/backend/deployment.yaml -n ${NAMESPACE}
+                    kubectl apply -f k8s/backend/service.yaml -n ${NAMESPACE}
+                    kubectl rollout status deployment/todo-backend -n ${NAMESPACE}
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Backend Deploy สำเร็จ!'
+        }
+        failure {
+            echo '❌ Backend Deploy ล้มเหลว กรุณาตรวจสอบ logs'
+        }
+    }
+}
