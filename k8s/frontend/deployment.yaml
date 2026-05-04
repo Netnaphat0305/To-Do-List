@@ -19,5 +19,5 @@ spec:
         ports:
         - containerPort: 3000
         env:
-        - name: REACT_APP_API_URL  # เปลี่ยนชื่อให้ตรงกับที่โค้ดคุณใช้ (เช่น NEXT_PUBLIC_API_URL)
-          value: "http://localhost:8080/api/v1" # คุยภายใน K8s Cluster ผ่าน Service Name
+        - name: NEXT_PUBLIC_API_URL
+          value: "http://localhost:8080/api/v1"
