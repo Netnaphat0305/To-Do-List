@@ -15,6 +15,9 @@ spec:
     spec:
       containers:
       - name: todo-frontend
-        image: nattasitfluk/todo-frontend:latest # ใช้ Image ที่คุณ Push สำเร็จล่าสุด
+        image: nattasitfluk/todo-frontend:latest
         ports:
         - containerPort: 3000
+        env:
+        - name: REACT_APP_API_URL  # เปลี่ยนชื่อให้ตรงกับที่โค้ดคุณใช้ (เช่น NEXT_PUBLIC_API_URL)
+          value: "http://todo-backend-service" # คุยภายใน K8s Cluster ผ่าน Service Name

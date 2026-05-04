@@ -23,12 +23,11 @@ spec:
           value: "postgres-service"
         - name: DB_PORT
           value: "5432"
-        - name: DB_NAME
+        - name: DB_NAME      # ตรงกับ dbName := os.Getenv("DB_NAME")
           value: "todo_db"
-        - name: DB_USER
+        - name: DB_USER      # ตรงกับ dbUser := os.Getenv("DB_USER")
           value: "postgres"
-        # ส่วนที่สำคัญที่สุด: ดึงรหัสผ่านจาก Secret
-        - name: DB_PASSWORD
+        - name: DB_PASS      # แก้จาก DB_PASSWORD เป็น DB_PASS ให้ตรงกับโค้ด Go!
           valueFrom:
             secretKeyRef:
               name: postgres-secret
