@@ -12,11 +12,17 @@ pipeline {
             }
         }
 
-        stage('Deploy Frontend to Kubernetes') {
+        stage('Build and Deploy Frontend') {
             steps {
                 sh '''
+                    docker build -t nattasitfluk/todo-frontend:latest ./frontend
+                    docker push nattasitfluk/todo-frontend:latest
                     kubectl apply -f k8s/frontend/deployment.yaml -n ${NAMESPACE}
                     kubectl apply -f k8s/frontend/service.yaml -n ${NAMESPACE}
+                    
+                    # บังคับให้ Kubernetes ดึง Image ใหม่ล่าสุดมาใช้ (เผื่อมันไม่เปลี่ยน)
+                    kubectl rollout restart deployment/todo-frontend -n ${NAMESPACE}
+                    
                     kubectl rollout status deployment/todo-frontend -n ${NAMESPACE}
                 '''
             }
@@ -25,7 +31,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Frontend Deploy สำเร็จ!'
+            echo '✅ Frontend Build & Deploy สำเร็จ!'
         }
     }
 }
