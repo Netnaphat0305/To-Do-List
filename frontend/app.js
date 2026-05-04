@@ -32,7 +32,7 @@ register.registerMetric(toggleCounter);
 register.registerMetric(deleteCounter);
 
 // URL ของ Go Backend (ปรับตามความจริงของคุณ)
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080/api/v1/tasks';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080/api/v1';
 
 // Helper Function สำหรับสร้าง HTML ของแต่ละรายการ (รักษา Style เดิม)
 const renderTask = (t) => `
@@ -69,7 +69,7 @@ const renderTask = (t) => `
 
 app.get('/', async (req, res) => {
     try {
-        const response = await axios.get(BACKEND_URL);
+        const response = await axios.get(`${BACKEND_URL}/tasks`);
         const tasks = response.data || [];
 
         // แยกงานตามสถานะ
@@ -122,13 +122,12 @@ app.get('/', async (req, res) => {
 // Endpoint สำหรับการเพิ่ม Task (ส่งต่อไปยัง Go Backend)
 app.post('/add', async (req, res) => {
     try {
-        await axios.post(BACKEND_URL, {
+        await axios.post(`${BACKEND_URL}/tasks`, { // แก้ตรงนี้: เติม /tasks
             title: req.body.title,
             description: req.body.description,
             status: "pending"
         });
-
-        taskCounter.inc(); // เพิ่ม Metric เมื่อสร้างสำเร็จ
+        taskCounter.inc();
         res.redirect('/'); 
     } catch (err) {
         res.status(500).send('Error adding task');
@@ -139,7 +138,7 @@ app.post('/add', async (req, res) => {
 // ไฟล์ app.js ในโฟลเดอร์ frontend
 app.post('/toggle/:id', async (req, res) => {
     try {
-        await axios.patch(`${BACKEND_URL}/${req.params.id}/toggle`); 
+        await axios.patch(`${BACKEND_URL}/tasks/${req.params.id}/toggle`); // แก้ตรงนี้: เติม /tasks
         toggleCounter.inc();
         res.redirect('/');
     } catch (err) { res.status(500).send('ไม่สามารถสลับสถานะได้'); }
@@ -148,11 +147,11 @@ app.post('/toggle/:id', async (req, res) => {
 // Endpoint สำหรับลบงาน (เพิ่มใหม่)
 app.post('/delete/:id', async (req, res) => {
     try {
-        await axios.delete(`${BACKEND_URL}/${req.params.id}`);
+        await axios.delete(`${BACKEND_URL}/tasks/${req.params.id}`); // แก้ตรงนี้: เติม /tasks
         deleteCounter.inc();
         res.redirect('/');
     } catch (err) {
-        res.status(500).send('ไม่สามารถสลับสถานะได้');
+        res.status(500).send('ไม่สามารถลบงานได้');
     }
 });
 
