@@ -15,6 +15,21 @@ spec:
     spec:
       containers:
       - name: todo-backend
-        image: nattasitfluk/todo-backend:latest # ใช้ Image ที่คุณ Build สำเร็จ
+        image: nattasitfluk/todo-backend:latest
         ports:
         - containerPort: 8080
+        env:
+        - name: DB_HOST
+          value: "postgres-service"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "todo_db"
+        - name: DB_USER
+          value: "postgres"
+        # ส่วนที่สำคัญที่สุด: ดึงรหัสผ่านจาก Secret
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
