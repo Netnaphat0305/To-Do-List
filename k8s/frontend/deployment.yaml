@@ -20,4 +20,4 @@ spec:
         - containerPort: 3000
         env:
         - name: BACKEND_URL
-          value: "http://localhost:8080/api/v1"
+          value: "http://todo-backend-service:80/api/v1"
