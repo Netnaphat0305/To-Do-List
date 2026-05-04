@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_USER  = 'YOUR_DOCKERHUB_USERNAME'
+        IMAGE_NAME      = "${DOCKERHUB_USER}/todo-frontend"
+        IMAGE_TAG       = 'latest'
+        NAMESPACE       = 'todo-app'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Deploy Frontend to Kubernetes') {
+            steps {
+                sh '''
+                    kubectl apply -f k8s/frontend/deployment.yaml -n ${NAMESPACE}
+                    kubectl apply -f k8s/frontend/service.yaml -n ${NAMESPACE}
+                    kubectl rollout status deployment/todo-frontend -n ${NAMESPACE}
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Frontend Deploy สำเร็จ!'
+        }
+        failure {
+            echo '❌ Frontend Deploy ล้มเหลว กรุณาตรวจสอบ logs'
+        }
+    }
+}
