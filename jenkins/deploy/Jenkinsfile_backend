@@ -2,37 +2,35 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USER  = 'YOUR_DOCKERHUB_USERNAME'
-        IMAGE_NAME      = "${DOCKERHUB_USER}/todo-backend"
-        IMAGE_TAG       = 'latest'
-        NAMESPACE       = 'todo-app'
+        DOCKERHUB_USER = 'nattasitfluk'
+        NAMESPACE      = 'todo-app'
     }
 
     stages {
-
-        stage('Checkout') {
+        stage('1. Checkout') {
             steps {
-                checkout scm
+                checkout scm # ดึงไฟล์ k8s จาก GitHub ของคุณ
             }
         }
 
-        stage('Deploy Backend to Kubernetes') {
+        stage('2. Deploy to Kubernetes') {
             steps {
-                sh '''
+                // สั่งให้ K8s อัปเดตตามไฟล์ YAML ที่เราเตรียมไว้
+                sh """
                     kubectl apply -f k8s/backend/deployment.yaml -n ${NAMESPACE}
-                    kubectl apply -f k8s/backend/service.yaml -n ${NAMESPACE}
+                    kubectl rollout restart deployment/todo-backend -n ${NAMESPACE}
                     kubectl rollout status deployment/todo-backend -n ${NAMESPACE}
-                '''
+                """
             }
         }
     }
 
     post {
         success {
-            echo '✅ Backend Deploy สำเร็จ!'
+            echo '✅ Backend Deploy สำเร็จและรันบน K8s แล้ว!'
         }
         failure {
-            echo '❌ Backend Deploy ล้มเหลว กรุณาตรวจสอบ logs'
+            echo '❌ Deploy ล้มเหลว ตรวจสอบสิทธิ์ kubectl หรือไฟล์ YAML'
         }
     }
 }
