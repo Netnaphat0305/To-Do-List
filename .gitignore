@@ -12,6 +12,3 @@ yarn-error.log*
 # Optional: ignore macOS files
 .DS_Store
 
-package-lock.json
-yarn.lock
-package.json
