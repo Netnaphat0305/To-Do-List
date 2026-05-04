@@ -12,3 +12,5 @@ yarn-error.log*
 # Optional: ignore macOS files
 .DS_Store
 
+# Secret files
+jenkins/secret.yaml
