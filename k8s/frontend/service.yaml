@@ -10,4 +10,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 3000
-  type: LoadBalancer # เพื่อให้ได้ External IP สำหรับเข้าหน้าเว็บ
+  type: ClusterIP # ใช้ ClusterIP แล้วทำ Port-forward จะเสถียรที่สุดบนเครื่องส่วนตัว

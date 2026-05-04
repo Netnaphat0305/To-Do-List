@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service  # ชื่อนี้ต้องตรงกับ DB_HOST ใน Backend
+  namespace: todo-app
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: todo-app
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret # ชื่อ Secret ที่คุณสร้างใน PowerShell
+              key: password         # ชื่อ key ที่เก็บรหัสไว้
+        - name: POSTGRES_DB
+          value: "todo_db" # เช็คในโค้ดด้วยว่าใช้ DB ชื่อนี้ไหม
+        ports:
+        - containerPort: 5432

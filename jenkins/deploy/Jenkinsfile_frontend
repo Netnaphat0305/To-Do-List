@@ -2,14 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USER  = 'nattasitfluk'
-        IMAGE_NAME      = "${DOCKERHUB_USER}/todo-frontend"
-        IMAGE_TAG       = 'latest'
-        NAMESPACE       = 'todo-app'
+        NAMESPACE = 'todo-app'
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -30,9 +26,6 @@ pipeline {
     post {
         success {
             echo '✅ Frontend Deploy สำเร็จ!'
-        }
-        failure {
-            echo '❌ Frontend Deploy ล้มเหลว กรุณาตรวจสอบ logs'
         }
     }
 }
