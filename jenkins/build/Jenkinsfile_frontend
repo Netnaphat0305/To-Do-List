@@ -66,11 +66,12 @@ pipeline {
 
         stage('6. Trigger Deploy') {
             steps {
+                // เพิ่ม wait: false เพื่อให้ Job Build ไม่ต้องค้างรอ Job Deploy
                 build job: 'deploy-frontend', 
-                parameters: [string(name: 'version', value: "${env.BUILD_NUMBER}")]
+                parameters: [string(name: 'version', value: "${env.BUILD_NUMBER}")],
+                wait: false
             }
         }
-    }
 
     post {
         always {
