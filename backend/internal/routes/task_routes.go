@@ -7,6 +7,7 @@ import (
     "backend/internal/middlewares"
     "github.com/gin-gonic/gin"
     "gorm.io/gorm"
+    "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func SetupRoutes(r *gin.Engine, db *gorm.DB) {
@@ -23,6 +24,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB) {
         api.POST("/tasks", ctrl.Create)
         api.PATCH("/tasks/:id/toggle", ctrl.ToggleStatus)
         api.DELETE("/tasks/:id", ctrl.Delete)
+        r.GET("/metrics", gin.WrapH(promhttp.Handler()))
     }
     
 }

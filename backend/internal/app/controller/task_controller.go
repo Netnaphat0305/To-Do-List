@@ -64,3 +64,14 @@ func (ctrl *TodoController) Delete(c *gin.Context) {
     
     c.JSON(200, gin.H{"message": "ลบงานเรียบร้อยแล้ว"})
 }
+
+func (ctrl *TodoController) GetMetrics(c *gin.Context) {
+    // สมมติว่าเรามีฟังก์ชันใน Service ที่ดึงข้อมูลเมตริกส์มา
+    metrics, err := ctrl.svc.GetMetrics()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "ไม่สามารถดึงข้อมูลเมตริกส์ได้"})
+        return
+    }
+    
+    c.JSON(http.StatusOK, metrics)
+}

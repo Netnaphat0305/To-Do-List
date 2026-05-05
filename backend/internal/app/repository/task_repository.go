@@ -11,6 +11,7 @@ type TaskRepository interface {
 	GetByID(id uint) (*entity.Task, error)
 	Update(task *entity.Task) error
 	Delete(id uint) error
+	GetMetrics() (map[string]interface{}, error)
 }
 
 type taskRepository struct {
@@ -45,4 +46,11 @@ func (r *taskRepository) Update(task *entity.Task) error {
 
 func (r *taskRepository) Delete(id uint) error {
 	return r.db.Delete(&entity.Task{}, id).Error
+}
+
+func (r *taskRepository) GetMetrics() (map[string]interface{}, error) {
+	// สมมติว่าเรามีฟังก์ชันใน Database ที่ดึงข้อมูลเมตริกส์มา
+	var metrics map[string]interface{}
+	err := r.db.Raw("SELECT COUNT(*) as total_tasks, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks FROM tasks").Scan(&metrics).Error
+	return metrics, err
 }
