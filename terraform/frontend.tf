@@ -21,7 +21,7 @@ resource "kubernetes_deployment" "todo_frontend" {
           name  = "todo-frontend"
           image = "nattasitfluk/todo-frontend:${var.image_tag}"
 
-          image_pull_policy = "Alway
+          image_pull_policy = "Always"
           port {
             container_port = 3000
           }
