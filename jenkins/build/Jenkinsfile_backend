@@ -19,7 +19,7 @@ pipeline {
         // Stage 2: เตรียม Dependencies
         stage('2. Build') {
             steps {
-                echo '📦 Installing dependencies...'
+                echo 'Installing dependencies...'
                 // ปลดคอมเมนต์หากต้องการรันคำสั่ง Go จริง
                 // sh 'cd backend && go mod download'
             }
@@ -29,7 +29,7 @@ pipeline {
         // แยกออกมาให้ชัดเจนตามเกณฑ์อาจารย์ และไม่ซ้ำกับ Stage 4
         stage('3. Test') {
             steps {
-                echo '🧪 Testing backend...'
+                echo 'Testing backend...'
                 // ตัวอย่างการรัน Test สั้นๆ
                 // sh 'cd backend && go test ./...'
             }
@@ -40,7 +40,7 @@ pipeline {
         stage('4. Docker Build') {
             steps {
                 script {
-                    echo '🏗️ Building Docker Image...'
+                    echo 'Building Docker Image...'
                     // ชี้ไปที่โฟลเดอร์ ./backend ตามโครงสร้างในรูป image_0ffffd.png
                     backendImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}", "./backend")
                 }
@@ -51,7 +51,7 @@ pipeline {
         stage('5. Push to DockerHub') {
             steps {
                 script {
-                    echo '🚀 Pushing Image to Docker Hub...'
+                    echo 'Pushing Image to Docker Hub...'
                     docker.withRegistry('', "${DOCKER_CREDS}") {
                         backendImage.push()
                         backendImage.push("latest")
@@ -71,7 +71,7 @@ pipeline {
             echo '❌ Pipeline ล้มเหลว กรุณาเช็ค Console Output'
         }
         always {
-            echo '🧹 Cleaning up workspace...'
+            echo 'Cleaning up workspace...'
             cleanWs()
             sh 'docker image prune -f || true'
         }

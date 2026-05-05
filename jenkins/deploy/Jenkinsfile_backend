@@ -1,17 +1,23 @@
 pipeline {
     agent any
 
+    options {
+        // 1. เพิ่มบรรทัดนี้เพื่อปิดการ Checkout อัตโนมัติของ Jenkins
+        // จะทำให้ช่อง "Declarative: Checkout SCM" หายไปจากหน้าจอ
+        skipDefaultCheckout() 
+    }
+
     environment {
         DOCKERHUB_USER = 'nattasitfluk'
         NAMESPACE      = 'todo-app'
     }
 
-    // เพิ่ม parameters เพื่อรับเลขเวอร์ชันจาก Job Build (Optional)
     parameters {
         string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'เลขเวอร์ชันที่จะ Deploy')
     }
 
     stages {
+        // 2. เมื่อใช้ skipDefaultCheckout ช่องนี้จะกลายเป็นจุดเริ่มต้นจุดเดียวที่หน้าจอแสดง
         stage('1. Checkout') {
             steps {
                 cleanWs()
@@ -21,24 +27,19 @@ pipeline {
 
         stage('2. Deploy via Terraform') {
             steps {
-                // เปลี่ยนจากการรัน kubectl apply มาเป็น Terraform ตาม Key Setup Tasks
                 script {
-                    echo "🛠️ Deploying Backend version: ${params.IMAGE_TAG} to K8s..."
-                    dir('terraform/backend') { // ชี้ไปที่โฟลเดอร์ terraform ของคุณ
-                        // สั่งรัน Terraform
+                    echo "Deploying Backend version: ${params.IMAGE_TAG} to K8s..."
+                    dir('terraform/backend') {
                         // sh "terraform init"
                         // sh "terraform apply -auto-approve -var='image_tag=${params.IMAGE_TAG}'"
-                        
-                        // หมายเหตุ: ถ้ายังไม่พร้อมใช้ Terraform สามารถใช้ kubectl เดิมไปก่อนได้
-                        // แต่อาจารย์แนะนำให้ใช้ Terraform เพื่อจัดการ Infrastructure
                     }
                 }
             }
         }
 
-        // เพิ่ม Stage ตรวจสอบสถานะ (Rollout Status) ให้แยกออกมาเพื่อให้เห็นในหน้า Stage View
         stage('3. Verify Deployment') {
             steps {
+                // แยกออกมาเป็น Stage ที่ 3 เพื่อให้เห็นความคืบหน้าชัดเจนใน Stage View
                 sh "kubectl rollout status deployment/todo-backend -n ${NAMESPACE}"
             }
         }
