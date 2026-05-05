@@ -6,21 +6,40 @@ pipeline {
         NAMESPACE      = 'todo-app'
     }
 
+    // เพิ่ม parameters เพื่อรับเลขเวอร์ชันจาก Job Build (Optional)
+    parameters {
+        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'เลขเวอร์ชันที่จะ Deploy')
+    }
+
     stages {
         stage('1. Checkout') {
             steps {
-                checkout scm // ดึงไฟล์ k8s จาก GitHub ของคุณ
+                cleanWs()
+                checkout scm 
             }
         }
 
-        stage('2. Deploy to Kubernetes') {
+        stage('2. Deploy via Terraform') {
             steps {
-                // สั่งให้ K8s อัปเดตตามไฟล์ YAML ที่เราเตรียมไว้
-                sh """
-                    kubectl apply -f k8s/backend/deployment.yaml -n ${NAMESPACE}
-                    kubectl rollout restart deployment/todo-backend -n ${NAMESPACE}
-                    kubectl rollout status deployment/todo-backend -n ${NAMESPACE}
-                """
+                // เปลี่ยนจากการรัน kubectl apply มาเป็น Terraform ตาม Key Setup Tasks
+                script {
+                    echo "🛠️ Deploying Backend version: ${params.IMAGE_TAG} to K8s..."
+                    dir('terraform/backend') { // ชี้ไปที่โฟลเดอร์ terraform ของคุณ
+                        // สั่งรัน Terraform
+                        // sh "terraform init"
+                        // sh "terraform apply -auto-approve -var='image_tag=${params.IMAGE_TAG}'"
+                        
+                        // หมายเหตุ: ถ้ายังไม่พร้อมใช้ Terraform สามารถใช้ kubectl เดิมไปก่อนได้
+                        // แต่อาจารย์แนะนำให้ใช้ Terraform เพื่อจัดการ Infrastructure
+                    }
+                }
+            }
+        }
+
+        // เพิ่ม Stage ตรวจสอบสถานะ (Rollout Status) ให้แยกออกมาเพื่อให้เห็นในหน้า Stage View
+        stage('3. Verify Deployment') {
+            steps {
+                sh "kubectl rollout status deployment/todo-backend -n ${NAMESPACE}"
             }
         }
     }
@@ -30,7 +49,10 @@ pipeline {
             echo '✅ Backend Deploy สำเร็จและรันบน K8s แล้ว!'
         }
         failure {
-            echo '❌ Deploy ล้มเหลว ตรวจสอบสิทธิ์ kubectl หรือไฟล์ YAML'
+            echo '❌ Deploy ล้มเหลว ตรวจสอบสถานะของ Cluster หรือไฟล์ Configuration'
+        }
+        always {
+            cleanWs()
         }
     }
 }

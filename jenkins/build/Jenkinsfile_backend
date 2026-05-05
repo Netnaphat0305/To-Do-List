@@ -8,43 +8,47 @@ pipeline {
     }
 
     stages {
-        // Stage 1: ดึงโค้ดล่าสุดจาก GitHub
+        // Stage 1: ใช้ checkout scm ตามที่คุณต้องการ
         stage('1. Checkout') {
             steps {
+                cleanWs()
                 checkout scm
             }
         }
 
-        // Stage 2: ติดตั้ง Dependencies หรือ Compile (ตามรูปอาจารย์)
+        // Stage 2: เตรียม Dependencies
         stage('2. Build') {
             steps {
-                echo '📦 Installing dependencies and compiling...'
-                // สำหรับ Go backend:
+                echo '📦 Installing dependencies...'
+                // ปลดคอมเมนต์หากต้องการรันคำสั่ง Go จริง
                 // sh 'cd backend && go mod download'
             }
         }
 
-        // Stage 3: รัน Unit Test (ต้องมีไฟล์ _test.go ในโปรเจกต์)
+        // Stage 3: ทดสอบโค้ด (Test) 
+        // แยกออกมาให้ชัดเจนตามเกณฑ์อาจารย์ และไม่ซ้ำกับ Stage 4
         stage('3. Test') {
             steps {
-                echo '🧪 Running Unit Tests...'
+                echo '🧪 Testing backend...'
+                // ตัวอย่างการรัน Test สั้นๆ
                 // sh 'cd backend && go test ./...'
             }
         }
 
-        // Stage 4: สร้าง Docker Image
+        // Stage 4: สร้าง Docker Image 
+        // ใช้รูปแบบ docker.build เพื่อให้ตัวแปร backendImage นำไปใช้ต่อใน Stage 5 ได้
         stage('4. Docker Build') {
             steps {
                 script {
                     echo '🏗️ Building Docker Image...'
-                    // สั่ง build โดยชี้ไปที่โฟลเดอร์ backend
+                    // ชี้ไปที่โฟลเดอร์ ./backend ตามโครงสร้างในรูป image_0ffffd.png
                     backendImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}", "./backend")
                 }
             }
         }
 
-        // Stage 5: ส่ง Image ขึ้น Docker Hub
-        stage('5. Push Hub') {
+        // Stage 5: ส่งขึ้น Docker Hub
+        stage('5. Push to DockerHub') {
             steps {
                 script {
                     echo '🚀 Pushing Image to Docker Hub...'
@@ -55,23 +59,13 @@ pipeline {
                 }
             }
         }
-
-        // Stage 6: สั่ง Deploy ด้วย Terraform ตาม Key Setup Tasks
-        stage('6. Deploy') {
-            steps {
-                echo '🛠️ Deploying to Kubernetes via Terraform...'
-                dir('terraform') {
-                    // ปลดคอมเมนต์ด้านล่างเมื่อเตรียมไฟล์ .tf ในโฟลเดอร์ terraform เสร็จแล้ว
-                    // sh 'terraform init'
-                    // sh 'terraform apply -auto-approve'
-                }
-            }
-        }
     }
 
     post {
         success {
-            echo '✅ Pipeline ทั้ง 6 Stages สำเร็จเรียบร้อย!'
+            echo '✅ Pipeline ทั้ง 5 Stages สำเร็จเรียบร้อย!'
+            // หากต้องการให้ไปเรียก Job Deploy ต่อ ให้ใส่บรรทัดล่างนี้:
+            // build job: 'Deploy-Backend-Job', wait: false
         }
         failure {
             echo '❌ Pipeline ล้มเหลว กรุณาเช็ค Console Output'
@@ -79,7 +73,6 @@ pipeline {
         always {
             echo '🧹 Cleaning up workspace...'
             cleanWs()
-            // ลบ image ที่ build ค้างไว้ในเครื่อง Jenkins เพื่อประหยัดพื้นที่
             sh 'docker image prune -f || true'
         }
     }
