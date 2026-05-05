@@ -1,5 +1,9 @@
 pipeline {
     agent any
+
+    tools {
+        terraform 'terraform' 
+    }
     
     parameters {
         string(name: 'version', defaultValue: 'latest', description: 'Image version to deploy')
@@ -20,7 +24,7 @@ pipeline {
                 script {
                     echo "Deploying Frontend version: ${params.version} to K8s Cluster..."
                     // ใช้ dir() เพื่อระบุตำแหน่งไฟล์ terraform ในโปรเจกต์
-                    dir('terraform/frontend') {
+                    dir('terraform') {
                         sh "terraform init"
                         sh "terraform apply -auto-approve -var='image_version=${params.version}'"
                     }
