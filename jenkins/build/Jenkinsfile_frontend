@@ -50,23 +50,24 @@ pipeline {
         }
 
         // Stage 5: ส่ง Image ขึ้น Docker Hub โดยใช้ Credentials ที่ตั้งไว้
-        stage('5. Push to Docker Hub') {
+        stage('Push to Docker Hub') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub', 
-                                     usernameVariable: 'DUSER', 
-                                     passwordVariable: 'DPASS')]) {
-                        echo "Logging in to Docker Hub..."
-                        sh "echo $DPASS | docker login -u $DUSER --password-stdin"
-                        
-                        echo "Pushing Image version: ${version}"
-                        sh "docker push ${IMAGE_NAME}:${version}"
-                        sh "docker push ${IMAGE_NAME}:latest"
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                        docker push ${IMAGE_NAME}:latest
+                    '''
                     }
-                }
             }
         }
     }
+}
 
     post {
         always {
