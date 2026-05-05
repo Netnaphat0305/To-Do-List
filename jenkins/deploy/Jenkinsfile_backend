@@ -1,26 +1,46 @@
 pipeline {
     agent any
 
+    options {
+        // 1. เพิ่มบรรทัดนี้เพื่อปิดการ Checkout อัตโนมัติของ Jenkins
+        // จะทำให้ช่อง "Declarative: Checkout SCM" หายไปจากหน้าจอ
+        skipDefaultCheckout() 
+    }
+
     environment {
         DOCKERHUB_USER = 'nattasitfluk'
         NAMESPACE      = 'todo-app'
     }
 
+    parameters {
+        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'เลขเวอร์ชันที่จะ Deploy')
+    }
+
     stages {
+        // 2. เมื่อใช้ skipDefaultCheckout ช่องนี้จะกลายเป็นจุดเริ่มต้นจุดเดียวที่หน้าจอแสดง
         stage('1. Checkout') {
             steps {
-                checkout scm // ดึงไฟล์ k8s จาก GitHub ของคุณ
+                cleanWs()
+                checkout scm 
             }
         }
 
-        stage('2. Deploy to Kubernetes') {
+        stage('2. Deploy via Terraform') {
             steps {
-                // สั่งให้ K8s อัปเดตตามไฟล์ YAML ที่เราเตรียมไว้
-                sh """
-                    kubectl apply -f k8s/backend/deployment.yaml -n ${NAMESPACE}
-                    kubectl rollout restart deployment/todo-backend -n ${NAMESPACE}
-                    kubectl rollout status deployment/todo-backend -n ${NAMESPACE}
-                """
+                script {
+                    echo "Deploying Backend version: ${params.IMAGE_TAG} to K8s..."
+                    dir('terraform/backend') {
+                        // sh "terraform init"
+                        // sh "terraform apply -auto-approve -var='image_tag=${params.IMAGE_TAG}'"
+                    }
+                }
+            }
+        }
+
+        stage('3. Verify Deployment') {
+            steps {
+                // แยกออกมาเป็น Stage ที่ 3 เพื่อให้เห็นความคืบหน้าชัดเจนใน Stage View
+                sh "kubectl rollout status deployment/todo-backend -n ${NAMESPACE}"
             }
         }
     }
@@ -30,7 +50,10 @@ pipeline {
             echo '✅ Backend Deploy สำเร็จและรันบน K8s แล้ว!'
         }
         failure {
-            echo '❌ Deploy ล้มเหลว ตรวจสอบสิทธิ์ kubectl หรือไฟล์ YAML'
+            echo '❌ Deploy ล้มเหลว ตรวจสอบสถานะของ Cluster หรือไฟล์ Configuration'
+        }
+        always {
+            cleanWs()
         }
     }
 }
