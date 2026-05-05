@@ -12,6 +12,7 @@ type TaskService interface {
 	ListTasks() ([]dto.TaskResponse, error)
 	ToggleTaskStatus(id uint) error
 	DeleteTask(id uint) error
+	GetMetrics() (map[string]interface{}, error)
 }
 
 type taskService struct {
@@ -72,4 +73,9 @@ func (s *taskService) ToggleTaskStatus(id uint) error {
 
 func (s *taskService) DeleteTask(id uint) error {
 	return s.repo.Delete(id)
+}
+
+func (s *taskService) GetMetrics() (map[string]interface{}, error) {
+	// สมมติว่าเรามีฟังก์ชันใน Repository ที่ดึงข้อมูลเมตริกส์มา
+	return s.repo.GetMetrics()
 }
