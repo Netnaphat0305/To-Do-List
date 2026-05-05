@@ -44,12 +44,13 @@ resource "kubernetes_service" "todo_frontend_service" {
     selector = {
       app = "todo-frontend"
     }
+    type = "NodePort"
     port {
       port        = 80
       target_port = 3000
       # แก้จุดที่ 3: กำหนดเลข Port สำหรับเข้าเว็บ (เลือกเลขระหว่าง 30000-32767)
       node_port   = 30005
     }
-    type = "ClusterIP"
+    
   }
 }
