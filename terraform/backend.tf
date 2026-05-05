@@ -21,6 +21,8 @@ resource "kubernetes_deployment" "todo_backend" {
           name  = "todo-backend"
           # ใช้ตัวแปรที่รับมาจาก Jenkins
           image = "nattasitfluk/todo-backend:${var.image_tag}"
+
+          image_pull_policy = "Always"
           
           port {
             container_port = 8080
