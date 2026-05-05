@@ -2,14 +2,12 @@ pipeline {
     agent any
 
     options {
-        // เพิ่มเพื่อให้หน้าจอ Stage View เริ่มที่เลข 1. Checkout ทันที
         skipDefaultCheckout()
     }
 
     environment {
         DOCKER_USER = "nattasitfluk"
         IMAGE_NAME  = "${DOCKER_USER}/todo-frontend"
-        // ใช้ชื่อตัวแปร version ตามที่คุณกำหนดไว้
         version     = "${BUILD_NUMBER}" 
     }
 
@@ -53,8 +51,6 @@ pipeline {
                     usernameVariable: 'D_USER',
                     passwordVariable: 'D_PASS'
                 )]) {
-                    // แก้ไข IMAGE_TAG เป็น version ให้ตรงกับ environment
-                    // และใช้ """ เพื่อให้ Jenkins ส่งค่าตัวแปรลงไปใน shell ได้
                     sh """
                         echo \$D_PASS | docker login -u \$D_USER --password-stdin
                         docker push ${IMAGE_NAME}:${version}
@@ -66,12 +62,12 @@ pipeline {
 
         stage('6. Trigger Deploy') {
             steps {
-                // เพิ่ม wait: false เพื่อให้ Job Build ไม่ต้องค้างรอ Job Deploy
                 build job: 'deploy-frontend', 
                 parameters: [string(name: 'version', value: "${env.BUILD_NUMBER}")],
                 wait: false
             }
-        }
+        } 
+    } // <--- ต้องมีปีกกาปิด stages ตรงนี้
 
     post {
         always {
