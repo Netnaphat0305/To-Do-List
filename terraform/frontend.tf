@@ -20,6 +20,8 @@ resource "kubernetes_deployment" "todo_frontend" {
         container {
           name  = "todo-frontend"
           image = "nattasitfluk/todo-frontend:${var.image_tag}"
+
+          image_pull_policy = "Always"
           port {
             container_port = 3000
           }
@@ -45,6 +47,8 @@ resource "kubernetes_service" "todo_frontend_service" {
     port {
       port        = 80
       target_port = 3000
+      # แก้จุดที่ 3: กำหนดเลข Port สำหรับเข้าเว็บ (เลือกเลขระหว่าง 30000-32767)
+      node_port   = 30005
     }
     type = "ClusterIP"
   }

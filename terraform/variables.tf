@@ -8,3 +8,8 @@ variable "namespace" {
   type    = string
   default = "todo-app"
 }
+
+variable "db_password" {
+  type      = string
+  sensitive = true
+}
