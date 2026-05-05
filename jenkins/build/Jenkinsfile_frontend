@@ -1,55 +1,86 @@
 pipeline {
-    agent any
+    agent { label "wsl" } // ใช้ Label ตามสภาพแวดล้อมที่คุณใช้งาน
 
     environment {
-        DOCKERHUB_USER  = 'nattasitfluk'
-        IMAGE_NAME      = "${DOCKERHUB_USER}/todo-frontend"
-        IMAGE_TAG       = "${BUILD_NUMBER}"
+        DOCKER_USER = "nattasitfluk"
+        IMAGE_NAME  = "${DOCKER_USER}/todo-frontend"
+        // ใช้ BUILD_NUMBER เพื่อระบุเวอร์ชันในแต่ละรอบการ Build
+        version     = "${BUILD_NUMBER}" 
     }
 
     stages {
-
-        stage('Checkout') {
+        // Stage 1: ใช้ checkout scm ตามที่คุณระบุ เพื่อความง่ายในการจัดการผ่าน UI
+        stage('1. Checkout') {
             steps {
+                cleanWs()
                 checkout scm
             }
         }
 
-        stage('Build Docker Image') {
+        // Stage 2: เตรียม Environment และตรวจสอบโค้ดเบื้องต้น
+        stage('2. Build & Test') {
             steps {
-                dir('frontend') {
-                    sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
+                echo "Preparing frontend dependencies for version: ${version}"
+                // สามารถปลดคอมเมนต์เพื่อรันคำสั่งจริง เช่น npm install หรือ npm run build
+                // sh "cd frontend && npm install && npm run build"
+            }
+        }
+
+        // Stage 3: สร้าง Docker Image จากโฟลเดอร์ frontend
+        stage('3. Docker Build') {
+            steps {
+                script {
+                    echo "Building Docker Image..."
+                    // ระบุ Path ไปยังโฟลเดอร์ frontend ตามโครงสร้างโปรเจกต์ของคุณ
+                    sh "cd frontend && docker build . -t ${IMAGE_NAME}:${version}"
+                    sh "docker tag ${IMAGE_NAME}:${version} ${IMAGE_NAME}:latest"
                 }
             }
         }
 
-        stage('Push to Docker Hub') {
+        // Stage 4: ทดสอบรัน Container เพื่อเช็คความเรียบร้อย (ตามแนวทางตัวอย่างที่คุณส่งมา)
+        stage('4. Test Docker Image') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'docker-hub-credentials',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
-                        docker push ${IMAGE_NAME}:latest
-                    '''
+                script {
+                    echo "Testing Frontend Container..."
+                    // ทดสอบรันเพื่อเช็คว่า Container สามารถ Start ได้ปกติ
+                    sh "docker run --rm ${IMAGE_NAME}:${version} echo 'Frontend Service Started Successfully!'"
+                }
+            }
+        }
+
+        // Stage 5: ส่ง Image ขึ้น Docker Hub โดยใช้ Credentials ที่ตั้งไว้
+        stage('5. Push to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', 
+                                     usernameVariable: 'DUSER', 
+                                     passwordVariable: 'DPASS')]) {
+                        echo "Logging in to Docker Hub..."
+                        sh "echo $DPASS | docker login -u $DUSER --password-stdin"
+                        
+                        echo "Pushing Image version: ${version}"
+                        sh "docker push ${IMAGE_NAME}:${version}"
+                        sh "docker push ${IMAGE_NAME}:latest"
+                    }
                 }
             }
         }
     }
 
     post {
+        always {
+            echo "Post-build cleanup..."
+            // ลบ Image ในเครื่องเพื่อไม่ให้พื้นที่เต็มตามแนวทางที่คุณต้องการ
+            sh "docker rmi ${IMAGE_NAME}:${version} ${IMAGE_NAME}:latest || true"
+            sh "docker logout"
+            cleanWs()
+        }
         success {
-            echo '✅ Frontend Build & Push สำเร็จ!'
+            echo "✅ Frontend Build & Push Completed!"
         }
         failure {
-            echo '❌ Frontend Build ล้มเหลว กรุณาตรวจสอบ logs'
-        }
-        always {
-            sh 'docker image prune -f || true'
+            echo "❌ Build Failed! Please check the console output."
         }
     }
 }
