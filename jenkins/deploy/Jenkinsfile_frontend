@@ -1,5 +1,5 @@
 pipeline {
-    agent { label "wsl" }
+    agent any
     
     parameters {
         string(name: 'version', defaultValue: 'latest', description: 'Image version to deploy')

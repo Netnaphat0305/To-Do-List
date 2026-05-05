@@ -1,5 +1,5 @@
 pipeline {
-    agent { label "wsl" } // ใช้ Label ตามสภาพแวดล้อมที่คุณใช้งาน
+    agent any
 
     environment {
         DOCKER_USER = "nattasitfluk"
