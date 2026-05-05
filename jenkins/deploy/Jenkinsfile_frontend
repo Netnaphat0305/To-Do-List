@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    options {
+        // ⭐️ เพิ่มบรรทัดนี้ เพื่อห้าม Jenkins แอบลบไฟล์ก่อนเริ่มงาน
+        skipDefaultCheckout()
+    }
+
     tools {
         terraform 'terraform' 
     }
@@ -12,7 +17,7 @@ pipeline {
     stages {
         stage('1. Checkout Infrastructure') {
             steps {
-                // ❌ ลบ cleanWs() ตรงนี้ออกไปแล้ว เพื่อไม่ให้มันลบสมุดจดก่อนเริ่มงาน
+                // เราจัดการ Checkout เอง ไฟล์จะได้ไม่หาย
                 checkout scm 
             }
         }
@@ -22,6 +27,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'DB_PASSWORD', variable: 'TF_VAR_db_password')]) {
                     dir('terraform') {
                         sh 'terraform init'
+                        // ใช้ -lock=false เผื่อกรณีไฟล์โดนล็อคค้างไว้
                         sh "terraform apply -auto-approve -var='image_tag=${params.version}'"
                     }
                 }
@@ -35,6 +41,5 @@ pipeline {
             }
         }
     }
-
-    // ❌ ลบ block post { always { cleanWs() } } ข้างล่างสุดทิ้งไปเลย!
+    // ห้ามใส่ cleanWs() ใน post เด็ดขาด!
 }
