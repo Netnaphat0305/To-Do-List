@@ -63,6 +63,13 @@ pipeline {
                 }
             }
         }
+
+        stage('6. Trigger Deploy') {
+            steps {
+                build job: 'deploy-frontend', 
+                parameters: [string(name: 'version', value: "${env.BUILD_NUMBER}")]
+            }
+        }
     }
 
     post {
