@@ -1,37 +1,46 @@
 pipeline {
     agent any
-
-    environment {
-        NAMESPACE = 'todo-app'
+    
+    parameters {
+        string(name: 'version', defaultValue: 'latest', description: 'Image version to deploy')
     }
 
     stages {
-        stage('Checkout') {
+        // Stage 1: เปลี่ยนกลับมาใช้ checkout scm ตามที่คุณต้องการ
+        stage('1. Checkout Infrastructure') {
             steps {
-                checkout scm
+                cleanWs()
+                // Jenkins จะจัดการดึงโค้ดตามที่ตั้งค่าไว้ใน Pipeline Job (SCM) โดยอัตโนมัติ
+                checkout scm 
             }
         }
 
-        stage('Build and Deploy Frontend') {
+        stage('2. Deploy via Terraform') {
             steps {
-                sh '''
-                    docker build -t nattasitfluk/todo-frontend:latest ./frontend
-                    docker push nattasitfluk/todo-frontend:latest
-                    kubectl apply -f k8s/frontend/deployment.yaml -n ${NAMESPACE}
-                    kubectl apply -f k8s/frontend/service.yaml -n ${NAMESPACE}
-                    
-                    # บังคับให้ Kubernetes ดึง Image ใหม่ล่าสุดมาใช้ (เผื่อมันไม่เปลี่ยน)
-                    kubectl rollout restart deployment/todo-frontend -n ${NAMESPACE}
-                    
-                    kubectl rollout status deployment/todo-frontend -n ${NAMESPACE}
-                '''
+                script {
+                    echo "Deploying Frontend version: ${params.version} to K8s Cluster..."
+                    // ใช้ dir() เพื่อระบุตำแหน่งไฟล์ terraform ในโปรเจกต์
+                    dir('terraform/frontend') {
+                        sh "terraform init"
+                        sh "terraform apply -auto-approve -var='image_version=${params.version}'"
+                    }
+                }
+            }
+        }
+
+        stage('3. Verify Status') {
+            steps {
+                echo "Verifying Deployment Status..."
+                // ตรวจสอบความเรียบร้อยของ Pod ใน namespace ที่กำหนด
+                sh "kubectl rollout status deployment/todo-frontend -n todo-app"
             }
         }
     }
 
     post {
-        success {
-            echo '✅ Frontend Build & Deploy สำเร็จ!'
+        always {
+            echo "Cleaning workspace..."
+            cleanWs()
         }
     }
 }

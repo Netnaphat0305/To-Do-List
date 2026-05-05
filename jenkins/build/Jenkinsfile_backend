@@ -19,7 +19,7 @@ pipeline {
         // Stage 2: เตรียม Dependencies
         stage('2. Build') {
             steps {
-                echo '📦 Installing dependencies...'
+                echo 'Installing dependencies...'
                 // ปลดคอมเมนต์หากต้องการรันคำสั่ง Go จริง
                 // sh 'cd backend && go mod download'
             }
@@ -29,7 +29,7 @@ pipeline {
         // แยกออกมาให้ชัดเจนตามเกณฑ์อาจารย์ และไม่ซ้ำกับ Stage 4
         stage('3. Test') {
             steps {
-                echo '🧪 Testing backend...'
+                echo 'Testing backend...'
                 // ตัวอย่างการรัน Test สั้นๆ
                 // sh 'cd backend && go test ./...'
             }
@@ -40,7 +40,7 @@ pipeline {
         stage('4. Docker Build') {
             steps {
                 script {
-                    echo '🏗️ Building Docker Image...'
+                    echo 'Building Docker Image...'
                     // ชี้ไปที่โฟลเดอร์ ./backend ตามโครงสร้างในรูป image_0ffffd.png
                     backendImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}", "./backend")
                 }
@@ -48,15 +48,20 @@ pipeline {
         }
 
         // Stage 5: ส่งขึ้น Docker Hub
-        stage('5. Push to DockerHub') {
+        stage('Push to Docker Hub') {
             steps {
-                script {
-                    echo '🚀 Pushing Image to Docker Hub...'
-                    docker.withRegistry('', "${DOCKER_CREDS}") {
-                        backendImage.push()
-                        backendImage.push("latest")
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                        docker push ${IMAGE_NAME}:latest
+                    '''
                     }
-                }
             }
         }
     }
@@ -71,7 +76,7 @@ pipeline {
             echo '❌ Pipeline ล้มเหลว กรุณาเช็ค Console Output'
         }
         always {
-            echo '🧹 Cleaning up workspace...'
+            echo 'Cleaning up workspace...'
             cleanWs()
             sh 'docker image prune -f || true'
         }

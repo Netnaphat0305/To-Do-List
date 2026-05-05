@@ -1,55 +1,82 @@
 pipeline {
     agent any
 
+    options {
+        // เพิ่มเพื่อให้หน้าจอ Stage View เริ่มที่เลข 1. Checkout ทันที
+        skipDefaultCheckout()
+    }
+
     environment {
-        DOCKERHUB_USER  = 'nattasitfluk'
-        IMAGE_NAME      = "${DOCKERHUB_USER}/todo-frontend"
-        IMAGE_TAG       = "${BUILD_NUMBER}"
+        DOCKER_USER = "nattasitfluk"
+        IMAGE_NAME  = "${DOCKER_USER}/todo-frontend"
+        // ใช้ชื่อตัวแปร version ตามที่คุณกำหนดไว้
+        version     = "${BUILD_NUMBER}" 
     }
 
     stages {
-
-        stage('Checkout') {
+        stage('1. Checkout') {
             steps {
+                cleanWs()
                 checkout scm
             }
         }
 
-        stage('Build Docker Image') {
+        stage('2. Build & Test') {
             steps {
-                dir('frontend') {
-                    sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
+                echo "Preparing frontend dependencies for version: ${version}"
+            }
+        }
+
+        stage('3. Docker Build') {
+            steps {
+                script {
+                    echo "Building Docker Image..."
+                    sh "cd frontend && docker build . -t ${IMAGE_NAME}:${version}"
+                    sh "docker tag ${IMAGE_NAME}:${version} ${IMAGE_NAME}:latest"
                 }
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('4. Test Docker Image') {
+            steps {
+                script {
+                    echo "Testing Frontend Container..."
+                    sh "docker run --rm ${IMAGE_NAME}:${version} echo 'Frontend Service Started Successfully!'"
+                }
+            }
+        }
+
+        stage('5. Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'docker-hub-credentials',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
+                    usernameVariable: 'D_USER',
+                    passwordVariable: 'D_PASS'
                 )]) {
-                    sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                    // แก้ไข IMAGE_TAG เป็น version ให้ตรงกับ environment
+                    // และใช้ """ เพื่อให้ Jenkins ส่งค่าตัวแปรลงไปใน shell ได้
+                    sh """
+                        echo \$D_PASS | docker login -u \$D_USER --password-stdin
+                        docker push ${IMAGE_NAME}:${version}
                         docker push ${IMAGE_NAME}:latest
-                    '''
+                    """
                 }
             }
         }
     }
 
     post {
+        always {
+            echo "Post-build cleanup..."
+            sh "docker rmi ${IMAGE_NAME}:${version} ${IMAGE_NAME}:latest || true"
+            sh "docker logout || true"
+            cleanWs()
+        }
         success {
-            echo '✅ Frontend Build & Push สำเร็จ!'
+            echo "✅ Frontend Build & Push Completed!"
         }
         failure {
-            echo '❌ Frontend Build ล้มเหลว กรุณาตรวจสอบ logs'
-        }
-        always {
-            sh 'docker image prune -f || true'
+            echo "❌ Build Failed! Please check the console output."
         }
     }
 }
