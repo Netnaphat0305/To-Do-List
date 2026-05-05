@@ -15,6 +15,7 @@ yarn-error.log*
 # Secret files
 jenkins/secret.yaml
 
-# Junk files from prometheus
+# Junk files from prometheus, grafana
 prometheus-data/
+grafana-data/
 prometheus/prometheus-data/
