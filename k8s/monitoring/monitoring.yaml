@@ -1,0 +1,90 @@
+# Prometheus Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: todo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus-config # ต้องชื่อตรงกับ ConfigMap ที่คุณสร้างไปก่อนหน้านี้
+---
+# Prometheus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: todo-app
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+  type: ClusterIP
+---
+# Grafana Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: todo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      # เพิ่ม securityContext เพื่อป้องกันสิทธิ์การเขียนไฟล์ (ถ้ายังรันไม่ขึ้น)
+      securityContext:
+        runAsUser: 472
+        fsGroup: 472
+      containers:
+      - name: grafana
+        # เปลี่ยนจาก grafana:latest เป็น grafana-oss เพื่อลดโอกาสเจอ format error
+        image: grafana/grafana-oss:10.4.2 
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_SERVER_ROOT_URL
+          value: "http://todo.local/grafana"
+        - name: GF_SERVER_SERVE_FROM_SUB_PATH
+          value: "true"
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "admin"
+---
+# Grafana Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: todo-app
+spec:
+  selector:
+    app: grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP

@@ -25,6 +25,20 @@ resource "kubernetes_ingress_v1" "todo_ingress" {
             }
           }
         }
+        # 2. เพิ่ม Path ใหม่สำหรับ Grafana (เพิ่มตรงนี้ครับ)
+        path {
+          path = "/grafana"
+          path_type = "Prefix"
+          backend {
+            service {
+              # ใส่ชื่อ Service ของ Grafana ให้ตรงกับที่คุณประกาศไว้ใน k8s
+              name = "grafana-service" 
+              port {
+                number = 3000
+              }
+            }
+          }
+        }
       }
     }
   }
