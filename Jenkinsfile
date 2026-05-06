@@ -67,6 +67,13 @@ pipeline {
                         """
                     }
                 }
+                script {
+                    echo "📊 Syncing Monitoring Config..."
+                    // อัปเดต ConfigMap เผื่อมีการแก้ไฟล์ prometheus.yml
+                    sh "kubectl create configmap prometheus-config --from-file=prometheus/prometheus.yml --from-file=prometheus/alert_rules.yml -n todo-app --dry-run=client -o yaml | kubectl apply -f -"
+                    // รัน Monitoring YAML อัตโนมัติ
+                    sh "kubectl apply -f k8s/monitoring/monitoring.yaml"
+                }
                 // ตรวจสอบสถานะการ Deploy โดยข้ามการเช็คใบรับรอง TLS
                 sh "kubectl --insecure-skip-tls-verify rollout status deployment/todo-frontend -n todo-app"
                 sh "kubectl --insecure-skip-tls-verify rollout status deployment/todo-backend -n todo-app"
