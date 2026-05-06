@@ -3,42 +3,32 @@ resource "kubernetes_ingress_v1" "todo_ingress" {
     name      = "todo-ingress"
     namespace = kubernetes_namespace.todo_app.metadata[0].name
     annotations = {
-      # ระบุให้ใช้ NGINX Ingress Controller
       "kubernetes.io/ingress.class" = "nginx"
-      # แก้ไขเป็น /$2 เพื่อให้มันดึงส่วนที่เหลือของ path มาใช้ครับ
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/$2"
+      # ลบ rewrite-target อันเก่าออก แล้วใช้บรรทัดล่างนี้แทนครับ
+      "nginx.ingress.kubernetes.io/configuration-snippet" = <<EOF
+        if ($request_uri ~* "/prometheus/(.*)") {
+            rewrite ^/prometheus/(.*) /$1 break;
+        }
+      EOF
     }
   }
 
   spec {
     rule {
-      # ชื่อ Domain ที่ต้องการใช้เข้าเว็บ
       host = "todo.local"
       http {
+        # 1. Frontend (ไม่ต้องแก้)
         path {
-          path = "/()(.*)" 
+          path = "/"
           path_type = "Prefix"
           backend {
             service {
               name = kubernetes_service.todo_frontend_service.metadata[0].name
-              port {
-                number = 80
-              }
+              port { number = 80 }
             }
           }
         }
-        # 2. เพิ่ม Path ใหม่สำหรับ Grafana (เพิ่มตรงนี้ครับ)
-        path {
-          path = "/prometheus(/|$)(.*)"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = "prometheus-service"
-              port { number = 9090 }
-            }
-          }
-        }
-        # 3. แก้ไข Path Grafana เป็นแบบนี้ครับ
+        # 2. Grafana (ไม่ต้องแก้)
         path {
           path = "/grafana"
           path_type = "Prefix"
@@ -46,6 +36,17 @@ resource "kubernetes_ingress_v1" "todo_ingress" {
             service {
               name = "grafana-service"
               port { number = 3000 }
+            }
+          }
+        }
+        # 3. Prometheus (ใช้ path ปกติ)
+        path {
+          path = "/prometheus"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = "prometheus-service"
+              port { number = 9090 }
             }
           }
         }
