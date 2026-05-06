@@ -5,6 +5,7 @@ resource "kubernetes_ingress_v1" "todo_ingress" {
     annotations = {
       # ระบุให้ใช้ NGINX Ingress Controller
       "kubernetes.io/ingress.class" = "nginx"
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/$2"
     }
   }
 
