@@ -10,4 +10,5 @@ terraform {
 provider "kubernetes" {
   # อ่านค่าจาก ~/.kube/config เหมือน kubectl
   config_path = "~/.kube/config"
+  insecure    = true
 }
