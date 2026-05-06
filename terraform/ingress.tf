@@ -40,7 +40,7 @@ resource "kubernetes_ingress_v1" "todo_ingress" {
         }
         # 3. แก้ไข Path Grafana เป็นแบบนี้ครับ
         path {
-          path = "/grafana(/|$)(.*)"
+          path = "/grafana"
           path_type = "Prefix"
           backend {
             service {
