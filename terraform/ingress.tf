@@ -5,6 +5,7 @@ resource "kubernetes_ingress_v1" "todo_ingress" {
     annotations = {
       # ระบุให้ใช้ NGINX Ingress Controller
       "kubernetes.io/ingress.class" = "nginx"
+      # แก้ไขเป็น /$2 เพื่อให้มันดึงส่วนที่เหลือของ path มาใช้ครับ
       "nginx.ingress.kubernetes.io/rewrite-target" = "/$2"
     }
   }
@@ -15,7 +16,7 @@ resource "kubernetes_ingress_v1" "todo_ingress" {
       host = "todo.local"
       http {
         path {
-          path = "/"
+          path = "/()(.*)" 
           path_type = "Prefix"
           backend {
             service {
@@ -28,28 +29,23 @@ resource "kubernetes_ingress_v1" "todo_ingress" {
         }
         # 2. เพิ่ม Path ใหม่สำหรับ Grafana (เพิ่มตรงนี้ครับ)
         path {
-          path = "/grafana"
+          path = "/prometheus(/|$)(.*)"
           path_type = "Prefix"
           backend {
             service {
-              # ใส่ชื่อ Service ของ Grafana ให้ตรงกับที่คุณประกาศไว้ใน k8s
-              name = "grafana-service" 
-              port {
-                number = 3000
-              }
+              name = "prometheus-service"
+              port { number = 9090 }
             }
           }
         }
-        # 3. เพิ่ม Path สำหรับ Prometheus (เพื่อให้เข้า localhost:9090 ได้อัตโนมัติ)
+        # 3. แก้ไข Path Grafana เป็นแบบนี้ครับ
         path {
-          path = "/prometheus"
+          path = "/grafana(/|$)(.*)"
           path_type = "Prefix"
           backend {
             service {
-              name = "prometheus-service" # เช็คชื่อ Service ในไฟล์ k8s ของคุณว่าชื่อนี้ไหม
-              port {
-                number = 9090
-              }
+              name = "grafana-service"
+              port { number = 3000 }
             }
           }
         }
