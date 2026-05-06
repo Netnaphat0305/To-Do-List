@@ -1,4 +1,9 @@
 terraform {
+  # Terraform เซฟความจำไว้ที่นี่ 
+  backend "local" {
+    path = "/var/jenkins_home/todo-app-terraform.tfstate"
+  }
+
   required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
