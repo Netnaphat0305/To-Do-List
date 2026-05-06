@@ -4,13 +4,15 @@ global:
 scrape_configs:
   - job_name: prometheus
     static_configs:
-      - targets: ["localhost:9090"]
+      - targets: ["prometheus-service:9090"] 
+
   - job_name: frontend_server
     static_configs:
-      - targets: ['frontend:3000']
+      - targets: ['todo-frontend-service:80']
+
   - job_name: backend_server
     static_configs:
-      - targets: ['backend:8080']
+      - targets: ['todo-backend-service:8080'] 
 
 rule_files:
     - "alert_rules.yml"
