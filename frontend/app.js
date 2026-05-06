@@ -15,7 +15,6 @@ const taskCounter = new client.Counter({
   name: 'todo_tasks_created_total',
   help: 'Total number of tasks created via frontend',
 });
-register.registerMetric(taskCounter);
 
 // Custom Metric: นับจำนวนการสลับสถานะ (Toggle)
 const toggleCounter = new client.Counter({
