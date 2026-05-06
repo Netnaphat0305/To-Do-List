@@ -19,7 +19,6 @@ pipeline {
         stage('2. Build & Test') {
             steps {
                 echo "Preparing All Services for version: ${IMAGE_TAG}"
-                // รันเทสต์ทั้ง Frontend และ Backend ในที่เดียว
             }
         }
 
@@ -44,10 +43,8 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'U', passwordVariable: 'P')]) {
                     sh "echo \$P | docker login -u \$U --password-stdin"
-                    // Push Frontend
                     sh "docker push ${FE_IMAGE}:${IMAGE_TAG}"
                     sh "docker push ${FE_IMAGE}:latest"
-                    // Push Backend
                     sh "docker push ${BE_IMAGE}:${IMAGE_TAG}"
                     sh "docker push ${BE_IMAGE}:latest"
                 }
@@ -56,11 +53,11 @@ pipeline {
 
         stage('6. Deploy & Auto-Ingress') {
             steps {
+                // ดึงรหัสผ่านจาก Jenkins Credentials (ID: DB_PASSWORD)
                 withCredentials([string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASS_VAR')]) {
                     dir('terraform') {
                         sh 'terraform init -upgrade'
-                        
-                        // ส่งรหัสผ่านผ่าน TF_VAR_db_password เพื่อให้ Terraform แมพเข้าตัวแปร var.db_password อัตโนมัติ
+                        // ส่งรหัสผ่านผ่าน TF_VAR_db_password เพื่อเข้าตัวแปรใน Terraform
                         sh """
                             export TF_VAR_db_password=${DB_PASS_VAR}
                             terraform apply -auto-approve -var='image_tag=${IMAGE_TAG}'
@@ -68,9 +65,11 @@ pipeline {
                     }
                 }
                 sh "kubectl rollout status deployment/todo-frontend -n todo-app"
-                echo "🚀 เสร็จแล้ว! เข้าเว็บได้ที่ http://todo.local"
+                sh "kubectl rollout status deployment/todo-backend -n todo-app"
+                echo "🚀 All Services Updated! เข้าเว็บที่ http://todo.local"
             }
         }
+    }
 
     post {
         always {
@@ -79,4 +78,4 @@ pipeline {
             cleanWs()
         }
     }
-}
+} 
