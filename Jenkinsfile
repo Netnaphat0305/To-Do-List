@@ -53,17 +53,21 @@ pipeline {
 
         stage('6. Deploy & Auto-Ingress') {
             steps {
-                // ดึงรหัสผ่านจาก Jenkins Credentials (ID: DB_PASSWORD)
                 withCredentials([string(credentialsId: 'DB_PASSWORD', variable: 'DB_PASS_VAR')]) {
                     dir('terraform') {
                         sh 'terraform init -upgrade'
-                        // ส่งรหัสผ่านผ่าน TF_VAR_db_password เพื่อเข้าตัวแปรใน Terraform
+                        
+                        // แก้ปัญหา Namespace Already Exists โดยการลองลบออกก่อน (ถ้ามี) 
+                        // ใส่ || true เพื่อให้ Pipeline ไม่หยุดถ้าไม่มี Namespace ให้ลบ
                         sh """
                             export TF_VAR_db_password=${DB_PASS_VAR}
+                            terraform destroy -target=kubernetes_namespace.todo_app -auto-approve -var='image_tag=${IMAGE_TAG}' || true
+                            
                             terraform apply -auto-approve -var='image_tag=${IMAGE_TAG}'
                         """
                     }
                 }
+                // ตรวจสอบสถานะการ Deploy โดยข้ามการเช็คใบรับรอง TLS
                 sh "kubectl --insecure-skip-tls-verify rollout status deployment/todo-frontend -n todo-app"
                 sh "kubectl --insecure-skip-tls-verify rollout status deployment/todo-backend -n todo-app"
                 echo "🚀 All Services Updated! เข้าเว็บที่ http://todo.local"
@@ -73,9 +77,10 @@ pipeline {
 
     post {
         always {
+            // ลบ Image ในเครื่อง Jenkins เพื่อประหยัดพื้นที่
             sh "docker rmi ${FE_IMAGE}:${IMAGE_TAG} ${BE_IMAGE}:${IMAGE_TAG} || true"
             sh "docker logout || true"
             cleanWs()
         }
     }
-} 
+}
