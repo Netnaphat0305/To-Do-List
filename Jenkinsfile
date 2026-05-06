@@ -64,8 +64,8 @@ pipeline {
                         """
                     }
                 }
-                sh "kubectl rollout status deployment/todo-frontend -n todo-app"
-                sh "kubectl rollout status deployment/todo-backend -n todo-app"
+                sh "kubectl --insecure-skip-tls-verify rollout status deployment/todo-frontend -n todo-app"
+                sh "kubectl --insecure-skip-tls-verify rollout status deployment/todo-backend -n todo-app"
                 echo "🚀 All Services Updated! เข้าเว็บที่ http://todo.local"
             }
         }
