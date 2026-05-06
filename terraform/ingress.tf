@@ -1,0 +1,31 @@
+resource "kubernetes_ingress_v1" "todo_ingress" {
+  metadata {
+    name      = "todo-ingress"
+    namespace = kubernetes_namespace.todo_app.metadata[0].name
+    annotations = {
+      # ระบุให้ใช้ NGINX Ingress Controller
+      "kubernetes.io/ingress.class" = "nginx"
+    }
+  }
+
+  spec {
+    rule {
+      # ชื่อ Domain ที่ต้องการใช้เข้าเว็บ
+      host = "todo.local"
+      http {
+        path {
+          path = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = kubernetes_service.todo_frontend_service.metadata[0].name
+              port {
+                number = 80
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
