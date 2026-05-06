@@ -39,6 +39,19 @@ resource "kubernetes_ingress_v1" "todo_ingress" {
             }
           }
         }
+        # 3. เพิ่ม Path สำหรับ Prometheus (เพื่อให้เข้า localhost:9090 ได้อัตโนมัติ)
+        path {
+          path = "/prometheus"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = "prometheus-service" # เช็คชื่อ Service ในไฟล์ k8s ของคุณว่าชื่อนี้ไหม
+              port {
+                number = 9090
+              }
+            }
+          }
+        }
       }
     }
   }
