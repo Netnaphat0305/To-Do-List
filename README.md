@@ -110,8 +110,6 @@ To-Do-List/
 | **Terraform** | 1.14.x | สร้างและจัดการ Infrastructure (IaC) |
 | **kubectl** | v1.34.x | คำสั่งควบคุมและสั่งการ Kubernetes Cluster |
 | **Jenkins** | ≥ 2.4xx | ระบบ CI/CD Automation สำหรับ Build และ Deploy |
-| **Ansible** | ≥ 2.15 | ตั้งค่าระบบและจัดการ Configuration ของ Server |
-| **Minikube / K3s** | Latest | ระบบ Kubernetes จำลองสำหรับรันในเครื่อง Local |
 | **Prometheus** | Latest | ระบบเก็บข้อมูล Metrics และตรวจสอบสถานะระบบ |
 | **Grafana** | Latest | ระบบแสดงผล Dashboard และ Visualize ข้อมูล |
 
@@ -140,8 +138,13 @@ npm start
 ### 3. Build และรันด้วย Docker
 ```bash
 # รันระบบทั้งหมดในโหมด Background
+**สำหรับรันตัวแอปพลิเคชันและฐานข้อมูล (Local Development):**
+หากต้องการรันระบบทั้งหมดรวมถึง PostgreSQL ในเครื่องเพื่อทดสอบฟังก์ชัน:
+```bash
+# รันระบบทั้งหมดในโหมด Background
 docker-compose up -d --build
-ตรวจสอบสถานะ Container: docker ps
+# ตรวจสอบสถานะ Container ที่รันอยู่
+docker ps
 ```
 
 ### 4. Build Image (สำหรับเตรียม Deploy)
