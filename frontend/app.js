@@ -10,25 +10,25 @@ app.use(express.urlencoded({ extended: true }));
 const register = new client.Registry();
 client.collectDefaultMetrics({ register });
 
-// Custom Metric: นับจำนวนการสร้าง Task
-const taskCounter = new client.Counter({
-  name: 'todo_tasks_created_total',
-  help: 'Total number of tasks created via frontend',
+// [แก้ไข] เปลี่ยนจาก Counter เป็น Gauge ทั้งหมด เพื่อให้เลข "ขึ้น-ลง" ได้ตามจริง
+const pendingGauge = new client.Gauge({
+  name: 'todo_tasks_pending_current',
+  help: 'จำนวนงานที่ค้างอยู่ในรายการปัจจุบัน',
 });
 
-// Custom Metric: นับจำนวนการสลับสถานะ (Toggle)
-const toggleCounter = new client.Counter({
-  name: 'todo_tasks_toggled_total',
-  help: 'Total number of times tasks were toggled',
-});
-const deleteCounter = new client.Counter({
-  name: 'todo_tasks_deleted_total',
-  help: 'Total number of tasks deleted via frontend',
+const completedGauge = new client.Gauge({
+  name: 'todo_tasks_completed_current',
+  help: 'จำนวนงานที่เสร็จแล้วในรายการปัจจุบัน',
 });
 
-register.registerMetric(taskCounter);
-register.registerMetric(toggleCounter);
-register.registerMetric(deleteCounter);
+const totalGauge = new client.Gauge({
+  name: 'todo_tasks_total_current',
+  help: 'จำนวนงานทั้งหมดที่มีอยู่ในระบบตอนนี้',
+});
+
+register.registerMetric(pendingGauge);
+register.registerMetric(completedGauge);
+register.registerMetric(totalGauge);
 
 // URL ของ Go Backend (ปรับตามความจริงของคุณ)
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080/api/v1';
@@ -154,10 +154,29 @@ app.post('/delete/:id', async (req, res) => {
     }
 });
 
-// Prometheus Scrape Endpoint
+// [แก้ไขใหม่] Prometheus Scrape Endpoint
 app.get('/metrics', async (req, res) => {
-    res.setHeader('Content-Type', register.contentType);
-    res.end(await register.metrics());
+    try {
+        // วิ่งไปดึงข้อมูลจริงจาก Go Backend
+        const response = await axios.get(`${BACKEND_URL}/tasks`);
+        const tasks = response.data || [];
+
+        // คำนวณจำนวนงานปัจจุบันจากสถานะจริง
+        const pendingCount = tasks.filter(t => t.status !== 'completed').length;
+        const completedCount = tasks.filter(t => t.status === 'completed').length;
+        const totalCount = tasks.length;
+
+        // สั่งอัปเดตค่า Gauge (ตัวเลขใน Grafana จะเปลี่ยนตามค่าเหล่านี้ทันที)
+        pendingGauge.set(pendingCount);
+        completedGauge.set(completedCount);
+        totalGauge.set(totalCount);
+
+        res.setHeader('Content-Type', register.contentType);
+        res.end(await register.metrics());
+    } catch (err) {
+        console.error("Error updating metrics:", err.message);
+        res.status(500).send("Error updating metrics");
+    }
 });
 
 // --- 3. Start Server ---
