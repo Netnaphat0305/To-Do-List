@@ -18,10 +18,12 @@
 ## 📌 ภาพรวมโปรเจค
 
 ### แอปพลิเคชัน
-- **ชื่อ:** [ชื่อแอป]
-- **ประเภท:** [เช่น REST API / Web App]
-- **ภาษา / Framework:** [Go / Node.js Express]
-- **คำอธิบาย:** เว็ปนี้ใช้สำหรับบันทึกรายการที่ต้องทำ เพื่อป้องกันการลืมในสิ่งที่ต้องทำในชีวิตประจำวัน
+- **ชื่อ:** To-Do-List ENG23
+- **ประเภท:** Full-stack Web Application (Microservices Architecture)
+- **ภาษา / Framework:** - **Backend:** Golang (Gin Framework)
+  - **Frontend:** Node.js (React / Next.js)
+  - **Database:** PostgreSQL
+- **คำอธิบาย:** เว็บแอปพลิเคชันสำหรับบันทึกและจัดการรายการสิ่งที่ต้องทำ เพื่อช่วยจัดระเบียบงานในชีวิตประจำวันและป้องกันการลืม โดยตัวระบบถูกออกแบบมาให้ทำงานบน Container และรองรับการทำ CI/CD เต็มรูปแบบ
 
 ### Architecture Diagram
 ```
@@ -61,34 +63,27 @@
 ```
 To-Do-List/
 ├── backend/                # ส่วนของ API (Golang)
+│   ├── config/             # การตั้งค่าฐานข้อมูลและระบบ (db.go, seed)
 │   ├── internal/           # Business Logic หลักของระบบ
-│   │   ├── app/            # ประกอบด้วย Controller, Entity, Repository
-│   │   ├── middlewares/    # ส่วนจัดการ Request (เช่น CORS, Auth)
+│   │   ├── app/            # ประกอบด้วย Controller, DTO, Entity, Repository
+│   │   ├── middlewares/    # ส่วนจัดการ Request (เช่น CORS)
 │   │   ├── routes/         # ส่วนกำหนดเส้นทาง API (Endpoints)
 │   │   └── service/        # ส่วนจัดการ Logic การทำงาน (Task Service)
 │   ├── Dockerfile          # สำหรับสร้าง Backend Image
-│   └── main.go             # Entry point ของแอปพลิเคชัน
+│   ├── main.go             # Entry point ของแอปพลิเคชัน
 │   └── go.mod              # ไฟล์จัดการ dependencies ของ Go
 ├── frontend/               # ส่วนของ UI (Node.js/React)
 │   ├── app.js              # โค้ดหลักของ Frontend
-│   ├── Dockerfile          # คำสั่งสร้าง Image ของ Frontend
+│   ├── Dockerfile          # สำหรับสร้าง Image ของ Frontend
 │   └── package.json        # ไฟล์จัดการ dependencies ของ Node.js
-├── jenkins/                # ไฟล์กำหนด Automation Pipeline
-│   ├── build/              # Pipeline สำหรับการ Build และ Test
-│   │   ├── Jenkinsfile_backend
-│   │   └── Jenkinsfile_frontend
-│   └── deploy/             # Pipeline สำหรับการ Deploy
-│       ├── Jenkinsfile_backend
-│       └── Jenkinsfile_frontend
 ├── k8s/                    # Kubernetes Manifests
-│   ├── backend/            # ตั้งค่าสำหรับ Backend
-│   │   ├── deployment.yaml
-│   │   ├── postgres.yaml   # ตั้งค่า Database
-│   │   └── service.yaml
-│   └── frontend/           # ตั้งค่าสำหรับ Frontend
-│       ├── deployment.yaml
-│       └── service.yaml
-├── docker-compose.yml      # สำหรับรันทุกอย่างพร้อมกันในเครื่อง (Local)
+│   ├── backend/            # Deployment, Service และ Postgres ของหลังบ้าน
+│   ├── frontend/           # Deployment และ Service ของหน้าบ้าน
+│   └── monitoring/         # การตั้งค่า Monitoring สำหรับ K8s
+├── prometheus/             # ไฟล์ตั้งค่าระบบเก็บ Metrics (Prometheus Config)
+├── terraform/              # ไฟล์ Infrastructure as Code (Backend, DB, Ingress)
+├── docker-compose.yml      # สำหรับรันระบบทั้งหมดพร้อมกันในเครื่อง (Local)
+├── Jenkinsfile             # ไฟล์กำหนด Automation Pipeline (CI/CD)
 └── README.md
 ```
 
@@ -96,19 +91,21 @@ To-Do-List/
 
 ## ⚙️ สิ่งที่ต้องติดตั้งก่อน (Prerequisites)
 
-ตรวจสอบให้แน่ใจว่าติดตั้งทุก tool ครบก่อนรันโปรเจค
+ตรวจสอบให้แน่ใจว่าติดตั้งเครื่องมือเหล่านี้ครบถ้วนก่อนเริ่มรันโปรเจค เพื่อให้สภาพแวดล้อมตรงกับที่ใช้พัฒนา
 
-| Tool | Version | หน้าที่ |
-|------|---------|---------|
-| Git | ≥ 2.x | จัดการ source code |
-| Docker | ≥ 24.x | สร้างและรัน container |
-| Jenkins | ≥ 2.4xx | ระบบ CI/CD automation |
-| Terraform | ≥ 1.x | Provision infrastructure |
-| Ansible | ≥ 2.15 | Configure environment |
-| kubectl | ≥ 1.28 | สั่งงาน Kubernetes cluster |
-| Minikube / K3s | latest | Kubernetes แบบ local |
-| Prometheus | ≥ 2.x | เก็บ metrics |
-| Grafana | ≥ 10.x | แสดง dashboard |
+| Tool | Version (Tested) | หน้าที่ |
+|------|------------------|---------|
+| **Git** | 2.50.x | จัดการ Source Code และ Version Control |
+| **Go** | 1.24.x | รันและ Build ระบบ Backend API |
+| **Node.js** | v22.17.x | รันและ Build ระบบ Frontend UI |
+| **Docker** | 28.5.x | สร้างและจัดการ Container ของแอปพลิเคชัน |
+| **Terraform** | 1.14.x | สร้างและจัดการ Infrastructure (IaC) |
+| **kubectl** | v1.34.x | คำสั่งควบคุมและสั่งการ Kubernetes Cluster |
+| **Jenkins** | ≥ 2.4xx | ระบบ CI/CD Automation สำหรับ Build และ Deploy |
+| **Ansible** | ≥ 2.15 | ตั้งค่าระบบและจัดการ Configuration ของ Server |
+| **Minikube / K3s** | Latest | ระบบ Kubernetes จำลองสำหรับรันในเครื่อง Local |
+| **Prometheus** | Latest | ระบบเก็บข้อมูล Metrics และตรวจสอบสถานะระบบ |
+| **Grafana** | Latest | ระบบแสดงผล Dashboard และ Visualize ข้อมูล |
 
 ---
 
@@ -134,9 +131,16 @@ npm start
 
 ### 3. Build และรันด้วย Docker
 ```bash
-# Build Backend
+# รันระบบทั้งหมดในโหมด Background
+docker-compose up -d --build
+ตรวจสอบสถานะ Container: docker ps
+```
+
+### 4. Build Image (สำหรับเตรียม Deploy)
+```bash
+# Build Backend Image
 docker build -t [username]/todo-backend:latest ./backend
-# Build Frontend
+# Build Frontend Image
 docker build -t [username]/todo-frontend:latest ./frontend
 ```
 
@@ -183,17 +187,6 @@ terraform apply     # สร้าง resource จริง
 ```
 > **สิ่งที่ Terraform สร้าง:** [อธิบาย เช่น Docker network, Kubernetes namespace, local directory]
 
-### Ansible — Configure Environment
-```bash
-cd ansible
-ansible-playbook -i inventory playbook.yml
-```
-> **สิ่งที่ Ansible ทำ:** [อธิบาย เช่น ติดตั้ง kubectl, copy kubeconfig, ตั้งค่า environment variable]
-
-> ⚠️ **หมายเหตุ:** ใน pipeline จริง Jenkins จะเรียก Terraform และ Ansible อัตโนมัติในขั้นตอน Deploy ไม่ต้องรันด้วยมือ
-
----
-
 ## ☸️ Kubernetes Deployment
 
 ### Apply Manifests ด้วยตัวเอง
@@ -218,10 +211,24 @@ NAME            TYPE       CLUSTER-IP     PORT(S)          AGE
 [app-name]-svc  NodePort   10.96.xx.xxx   5000:30080/TCP   2m
 ```
 
-### เข้าถึงแอปพลิเคชัน
-```
-http://localhost:30080
-```
+### การเข้าถึงแอปพลิเคชัน
+
+เนื่องจากระบบมีการใช้ **Ingress Controller** เพื่อจัดการเส้นทาง (Routing) คุณสามารถเข้าถึงบริการต่างๆ ผ่าน Domain Name ได้ดังนี้:
+
+| บริการ | URL สำหรับเข้าใช้งาน |
+|------|--------------------|
+| **Frontend UI** | [http://todo.local](http://todo.local) |
+| **Grafana Dashboard** | [http://todo.local/grafana](http://todo.local/grafana) |
+| **Prometheus UI** | [http://todo.local/prometheus](http://todo.local/prometheus) |
+
+---
+
+### การตั้งค่าเพิ่มเติมสำหรับเครื่อง Local
+เพื่อให้เครื่องของคุณรู้จักชื่อ `todo.local` คุณจำเป็นต้องเพิ่ม IP ของ Kubernetes Cluster ลงในไฟล์ `hosts` ของเครื่องคุณก่อน:
+
+1. **ตรวจสอบ IP ของ Ingress:**
+   ```bash
+   kubectl get ingress -n todo-app
 
 ---
 
