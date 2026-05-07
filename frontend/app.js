@@ -126,7 +126,7 @@ app.post('/add', async (req, res) => {
             description: req.body.description,
             status: "pending"
         });
-        taskCounter.inc();
+        //taskCounter.inc();
         res.redirect('/'); 
     } catch (err) {
         res.status(500).send('Error adding task');
@@ -138,7 +138,7 @@ app.post('/add', async (req, res) => {
 app.post('/toggle/:id', async (req, res) => {
     try {
         await axios.patch(`${BACKEND_URL}/tasks/${req.params.id}/toggle`); // แก้ตรงนี้: เติม /tasks
-        toggleCounter.inc();
+        //toggleCounter.inc();
         res.redirect('/');
     } catch (err) { res.status(500).send('ไม่สามารถสลับสถานะได้'); }
 });
@@ -147,7 +147,7 @@ app.post('/toggle/:id', async (req, res) => {
 app.post('/delete/:id', async (req, res) => {
     try {
         await axios.delete(`${BACKEND_URL}/tasks/${req.params.id}`); // แก้ตรงนี้: เติม /tasks
-        deleteCounter.inc();
+       // deleteCounter.inc();
         res.redirect('/');
     } catch (err) {
         res.status(500).send('ไม่สามารถลบงานได้');
