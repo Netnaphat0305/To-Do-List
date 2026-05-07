@@ -16,7 +16,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8080:8080"  
+      - "8180:8080"  
     depends_on:
       db:
         condition: service_healthy # รอจนกว่า db จะ Healthy จริงๆ
@@ -36,6 +36,17 @@ services:
       BACKEND_URL: http://backend:8080/api/v1
     depends_on:
       - backend
+  
+  jenkins: 
+    image: jenkins/jenkins:lts
+    container_name: my-jenkins
+    ports:
+      - "8080:8080" # Jenkins จะยึดพอร์ต 8080
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home # แก้ไข path เล็กน้อยให้ตรงตามมาตรฐาน Jenkins Image
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
 
   prometheus:
     image: prom/prometheus:latest
@@ -66,4 +77,5 @@ services:
       - prometheus
 volumes:
   grafana_storage:
+  jenkins_home:
  
