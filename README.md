@@ -18,7 +18,7 @@
 ## 📌 ภาพรวมโปรเจค
 
 ### แอปพลิเคชัน
-- **ชื่อ:** To-Do-List ENG23
+- **ชื่อ:** To-Do-List 
 - **ประเภท:** Full-stack Web Application (Microservices Architecture)
 - **ภาษา / Framework:** - **Backend:** Golang (Gin Framework)
   - **Frontend:** Node.js (React / Next.js)
@@ -163,26 +163,27 @@ docker build -t [username]/todo-frontend:latest ./frontend
 ### ลำดับการทำงานของ Pipeline
 
 ```
-Checkout ──▶ Build ──▶ Test ──▶ Docker Build ──▶ Push to Hub ──▶ Deploy
+Checkout ──▶ Build & Test ──▶ Docker Build ──▶ Test Docker Images ──▶ Push to Docker Hub ──▶ Deploy & Auto-Ingress
 ```
 
 | Stage | คำอธิบาย |
 |-------|----------|
 | **Checkout** | ดึงโค้ดล่าสุดจาก GitHub |
-| **Build** | ติดตั้ง dependencies |
+| **Build & Test** | ติดตั้ง Dependencies ที่จำเป็นและรัน Unit Test เพื่อตรวจสอบความถูกต้องของแอปพลิเคชัน |
 | **Test** | รัน unit test |
-| **Docker Build** | สร้าง Docker image |
-| **Push to Hub** | อัปโหลด image ขึ้น Docker Hub |
-| **Deploy** | รัน Terraform + Ansible แล้ว apply Kubernetes manifests |
+| **Docker Build** | เริ่มกระบวนการสร้าง Docker Images จาก Dockerfile ทั้งส่วน Frontend และ Backend |
+| **Test Docker Images** | ตรวจสอบความสมบูรณ์ของ Docker Images ที่ถูกสร้างขึ้นก่อนนำไปใช้งานจริง |
+| **Push to Docker Hub** | ทำการ Tag และ Push Docker Images ขึ้นไปเก็บไว้ที่ Docker Hub Registry |
+| **Deploy & Auto-Ingress** | ใช้ Terraform และ kubectl ในการ Deploy แอปฯ ลงบน Kubernetes Cluster พร้อมตั้งค่า Ingress เพื่อให้เข้าถึงผ่านโดเมน todo.local ได้ทันที |
 
 ### วิธีตั้งค่า Jenkins
 1. ติดตั้ง Jenkins และเปิดที่ `http://localhost:8080`
 2. ติดตั้ง plugin: **Git**, **Pipeline**, **Docker Pipeline**
-3. เพิ่ม credentials สำหรับ Docker Hub (ชื่อ `dockerhub-credentials`)
-4. สร้าง Pipeline job ใหม่ และชี้ไปที่ repository นี้
+3. เพิ่ม credentials สำหรับ Docker Hub (ชื่อ `docker-hub-credentials`)
+4. สร้าง Pipeline job ใหม่ และชี้ไปที่ repository นี้ https://github.com/Netnaphat0305/To-Do-List.git
 5. ตั้งค่า Webhook ใน GitHub:
    - ไปที่ **Settings → Webhooks → Add webhook**
-   - Payload URL: `http://[jenkins-host]:8080/github-webhook/`
+   - Payload URL: `https://throttle-fridge-jittery.ngrok-free.dev/github-webhook/`
    - Content type: `application/json`
    - ติ๊ก trigger: **Just the push event**
 
@@ -197,30 +198,47 @@ terraform init      # ดาวน์โหลด provider plugins
 terraform plan      # ตรวจสอบว่าจะสร้างอะไรบ้าง
 terraform apply     # สร้าง resource จริง
 ```
-> **สิ่งที่ Terraform สร้าง:** [อธิบาย เช่น Docker network, Kubernetes namespace, local directory]
+> **สิ่งที่ Terraform สร้าง:** 
+Namespace: todo-app สำหรับแยกส่วนการทำงาน
+Workloads: Deployment ของ Frontend และ Backend API
+Network: Kubernetes Services (NodePort/ClusterIP) และ Ingress Rules สำหรับโดเมน todo.local
+Storage: Persistent Volumes สำหรับฐานข้อมูล PostgreSQL
+Config: Management ของ Environment Variables และ ConfigMaps
 
 ## ☸️ Kubernetes Deployment
 
 ### Apply Manifests ด้วยตัวเอง
 ```bash
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/backend/deployment.yaml
+kubectl apply -f k8s/backend/service.yaml  
+kubectl apply -f k8s/backend/postgres.yaml
+kubectl apply -f k8s/frontend/deployment.yaml
+kubectl apply -f k8s/frontend/service.yaml
 ```
 
 ### ตรวจสอบสถานะ
 ```bash
-kubectl get pods -n [namespace]
-kubectl get svc  -n [namespace]
+kubectl get pods -n todo-app 
+kubectl get svc  -n todo-app 
 ```
 
 ### ผลลัพธ์ที่ควรจะได้
 ```
-NAME                        READY   STATUS    RESTARTS   AGE
-[app-name]-xxxxxxxxx-xxxxx  1/1     Running   0          2m
-[app-name]-xxxxxxxxx-yyyyy  1/1     Running   0          2m
+NAME                             READY   STATUS    RESTARTS       AGE
+grafana-7d7dd7b7b-7v5fv          1/1     Running   1 (114m ago)   5h54m
+postgres-59449bfb7b-czd7l        1/1     Running   1 (114m ago)   5h55m
+prometheus-5d767fb57d-thsgc      1/1     Running   1 (114m ago)   5h54m
+todo-backend-5cd6d5994-kv5ph     1/1     Running   4 (114m ago)   5h55m
+todo-backend-5cd6d5994-s5hct     1/1     Running   4 (114m ago)   5h55m
+todo-frontend-6498649f6b-twj4h   1/1     Running   1 (114m ago)   5h55m
+todo-frontend-6498649f6b-vp7dx   1/1     Running   1 (114m ago)   5h55m
 
-NAME            TYPE       CLUSTER-IP     PORT(S)          AGE
-[app-name]-svc  NodePort   10.96.xx.xxx   5000:30080/TCP   2m
+NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+grafana-service         ClusterIP   10.96.74.1      <none>        3000/TCP       5h55m
+postgres-service        ClusterIP   10.96.227.165   <none>        5432/TCP       5h55m
+prometheus-service      ClusterIP   10.96.37.113    <none>        9090/TCP       5h55m
+todo-backend-service    ClusterIP   10.96.216.151   <none>        80/TCP         5h55m
+todo-frontend-service   NodePort    10.96.222.234   <none>        80:30005/TCP   5h55m
 ```
 
 ### การเข้าถึงแอปพลิเคชัน
@@ -231,7 +249,7 @@ NAME            TYPE       CLUSTER-IP     PORT(S)          AGE
 |------|--------------------|
 | **Frontend UI** | [http://todo.local](http://todo.local) |
 | **Grafana Dashboard** | [http://todo.local/grafana](http://todo.local/grafana) |
-| **Prometheus UI** | [http://todo.local/prometheus](http://todo.local/prometheus) |
+| **Prometheus UI** | [http://todo.local/prometheus/targets](http://todo.local/prometheus/targets) |
 
 ---
 
@@ -249,12 +267,9 @@ NAME            TYPE       CLUSTER-IP     PORT(S)          AGE
 ### Prometheus — เก็บ Metrics
 - ไฟล์ config: `monitoring/prometheus.yml`
 - Scrape ทุก **15 วินาที**
-- Target endpoint: `http://[app-host]:[port]/metrics`
-
-รัน Prometheus:
+- Target endpoint: `http://todo.local/metrics`
 ```bash
-prometheus --config.file=monitoring/prometheus.yml
-# เปิด UI ที่ http://localhost:9090
+# เปิด UI ที่ http://todo.local/prometheus/targets
 ```
 
 ### Grafana — แสดง Dashboard
@@ -262,7 +277,7 @@ prometheus --config.file=monitoring/prometheus.yml
 - Data source: Prometheus (`http://localhost:9090`)
 
 วิธี import dashboard:
-1. เปิด Grafana ที่ `http://localhost:3000`
+1. เปิด Grafana ที่ `http://localhost:3000 หรือ http://todo.local/grafana`
 2. ไปที่ **Dashboards → Import**
 3. อัปโหลดไฟล์ `grafana-dashboard.json`
 
@@ -270,11 +285,12 @@ prometheus --config.file=monitoring/prometheus.yml
 
 | Panel | Metric (PromQL) | แสดงข้อมูลอะไร |
 |-------|-----------------|----------------|
-| Request Rate | `rate(http_requests_total[1m])` | จำนวน request ต่อวินาที |
-| Error Rate | `rate(http_requests_total{status=~"5.."}[1m])` | จำนวน error 5xx ต่อวินาที |
-| Latency (p95) | `histogram_quantile(0.95, ...)` | response time ที่ percentile 95 |
-| Pod Health | `up{job="[app-name]"}` | service ขึ้นหรือล่ม (1/0) |
-
+| งานที่ค้างอยู่ (Pending) | `todo_tasks_pending_current` | จำนวนงานที่ยังไม่ได้ทำ |
+| สำเร็จแล้ว (Completed) | `todo_tasks_completed_current` | จำนวนงานที่เช็คถูกว่าทำเสร็จแล้ว |
+| งานทั้งหมดในระบบ | `todo_tasks_total_current` | ผลรวมรายการงานทั้งหมดในฐานข้อมูล |
+| CPU Usage | `rate(process_cpu_user_seconds_total[1m])` | การใช้งาน CPU ของโปรเซสแอป |
+| Memory Usage | `process_resident_memory_bytes` | หน่วยความจำที่แอปใช้งานจริง |
+| Event Loop Lag | `nodejs_eventloop_lag_seconds` | ความหน่วงของ Event Loop ใน Node.js |
 ---
 
 ## 🌿 Branching Strategy
@@ -312,10 +328,11 @@ prometheus --config.file=monitoring/prometheus.yml
 
 ## 🐛 ปัญหาที่พบบ่อย (Troubleshooting)
 
-**Pods ค้างอยู่ที่ `Pending` ไม่ยอม Running**
+**jenkins Pipeline ล้มเหลวใน Stage "Deploy & Auto-Ingress" (TLS/SSL Error)**
 ```bash
-kubectl describe pod [pod-name] -n [namespace]
-# ดูที่ Events: อาจเกิดจาก resource ไม่พอ หรือ image pull error
+# สาเหตุ: คำสั่ง kubectl พยายามตรวจสอบใบรับรองความปลอดภัย (Certificate) ของ Cluster แต่ไม่สำเร็จ ทำให้ Pipeline หยุดทำงาน
+#การแก้ไข: เพิ่ม Flag --insecure-skip-tls-verify ในทุกคำสั่งของ kubectl ภายใน Jenkinsfile เพื่อข้ามการตรวจสอบ Certificate
+sh "kubectl --insecure-skip-tls-verify apply -f k8s/monitoring/monitoring.yaml"
 ```
 
 **Jenkins pipeline ล้มเหลวตอน Docker Build**
@@ -329,15 +346,15 @@ sudo usermod -aG docker jenkins
 **Prometheus แสดง target เป็น DOWN**
 ```bash
 # ตรวจว่าแอปเปิด /metrics ได้จริง
-curl http://localhost:5000/metrics
+curl http://todo.local/metrics
 # ตรวจ prometheus.yml ว่า host:port ตรงกับแอปจริง
 ```
 
 ---
 ## ไฟล์รายละเอียดโปรเจกต์ (PDF)
-```bash
+
 [ดาวน์โหลดไฟล์รายละเอียดโปรเจกต์ (PDF)](./Project-ServerlessPDF.pdf)
-```
+
 
 ## 📚 เอกสารอ้างอิง
 
@@ -356,4 +373,5 @@ curl http://localhost:5000/metrics
 
 - วิชา: **ENG23 3074 — Serverless and Cloud Architectures**
 - อาจารย์ผู้สอน: **ดร. นันทวุฒิ คะอังกุ (AFHEA)**
+              **คุณ จริณ เจริญศิริ ตำแหน่ง Cloud Engineer บริษัท กรุงศรี นิมเบิล จำกัด**
 - ภาควิชาวิศวกรรมคอมพิวเตอร์

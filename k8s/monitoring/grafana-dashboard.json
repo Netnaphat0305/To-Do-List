@@ -1,0 +1,80 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "--- To-Do Application Status ---",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "title": "งานที่ค้างอยู่ (Pending)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 1 },
+      "targets": [{ "expr": "todo_tasks_pending_current", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "orange" } }
+      }
+    },
+    {
+      "title": "สำเร็จแล้ว (Completed)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 1 },
+      "targets": [{ "expr": "todo_tasks_completed_current", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } }
+      }
+    },
+    {
+      "title": "งานทั้งหมดในระบบ",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 1 },
+      "targets": [{ "expr": "todo_tasks_total_current", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": { "min": 0, "max": 20 }
+      }
+    },
+    {
+      "title": "--- System Resources (Node.js) ---",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 }
+    },
+    {
+      "title": "CPU Usage (Process)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "rate(process_cpu_user_seconds_total[1m])", "legendFormat": "User CPU" },
+        { "expr": "rate(process_cpu_system_seconds_total[1m])", "legendFormat": "System CPU" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit" } }
+    },
+    {
+      "title": "Memory Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "process_resident_memory_bytes", "legendFormat": "Resident Memory (RSS)" },
+        { "expr": "nodejs_heap_size_used_bytes", "legendFormat": "Heap Used" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "title": "Node.js Event Loop Lag",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 16 },
+      "targets": [{ "expr": "nodejs_eventloop_lag_seconds", "legendFormat": "Lag (Seconds)" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "title": "Full App & System Monitoring",
+  "uid": "todo_system_monitor",
+  "time": { "from": "now-15m", "to": "now" }
+}
