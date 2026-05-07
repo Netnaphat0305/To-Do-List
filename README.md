@@ -280,16 +280,22 @@ prometheus --config.file=monitoring/prometheus.yml
 ## 🌿 Branching Strategy
 
 ```
-main        ──── โค้ดที่พร้อม production, protected branch
-dev         ──── รวมโค้ดก่อน merge ขึ้น main
-feature/*   ──── พัฒนา feature แต่ละอัน (เช่น feature/add-login)
+ระบบใช้การจัดการ Branch ตามโครงสร้างความรับผิดชอบของสมาชิกในกลุ่ม เพื่อให้สามารถพัฒนาแต่ละส่วนขนานกันได้อย่างมีประสิทธิภาพก่อนจะนำมารวมกันที่ Branch หลัก
+
 ```
 
-| Branch | Protected | คำอธิบาย |
-|--------|-----------|----------|
-| `main` | ✅ | trigger pipeline อัตโนมัติเมื่อ merge |
-| `dev` | ✅ | ทดสอบก่อน merge ขึ้น main |
-| `feature/*` | ❌ | พัฒนาแยกกันแล้วค่อย merge เข้า dev |
+| Branch | ผู้รับผิดชอบ | รายละเอียดการพัฒนา |
+|--------|-------------|-------------------|
+| `main` | **ทุกคน** | Branch หลักที่เป็นโค้ดชุดสมบูรณ์ (Production-ready) |
+| `Looktao` | เนตรนภัทร | พัฒนาส่วน Web Application (Frontend & Backend API) |
+| `fluk` | ณัฐสิทธิ์ | พัฒนาส่วน Jenkins Pipeline และ Docker Configuration |
+| `som` | พิมพ์นารา | พัฒนาส่วน Infrastructure as Code (Terraform) |
+| `Chompoo` | พนิดา | พัฒนาส่วน Monitoring (Prometheus & Grafana) |
+
+### กระบวนการทำงาน (Workflow)
+1. **แยกทำงาน (Isolation):** สมาชิกแต่ละคนพัฒนาฟีเจอร์ใน Branch ของตัวเองตามความรับผิดชอบ
+2. **การรวมโค้ด (Integration):** เมื่อพัฒนาแต่ละส่วนเสร็จสิ้นและผ่านการทดสอบ จะทำการ Merge เข้าสู่ Branch `main`
+3. **อัตโนมัติ (Automation):** เมื่อมีการ Update ที่ Branch `main` ระบบ Jenkins จะทำการ Trigger Pipeline เพื่อ Deploy แอปพลิเคชันโดยอัตโนมัติ
 
 ---
 
@@ -330,7 +336,11 @@ curl http://localhost:5000/metrics
 ```
 
 ---
+## ไฟล์รายละเอียดโปรเจกต์ (PDF)
+```bash
 [ดาวน์โหลดไฟล์รายละเอียดโปรเจกต์ (PDF)](./Project-ServerlessPDF.pdf)
+```
+
 ## 📚 เอกสารอ้างอิง
 
 - [Jenkinsfile Declarative Pipeline Syntax](https://www.jenkins.io/doc/book/pipeline/syntax/)
