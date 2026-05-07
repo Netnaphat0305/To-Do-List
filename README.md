@@ -62,29 +62,37 @@
 
 ```
 To-Do-List/
-├── backend/                # ส่วนของ API (Golang)
-│   ├── config/             # การตั้งค่าฐานข้อมูลและระบบ (db.go, seed)
-│   ├── internal/           # Business Logic หลักของระบบ
-│   │   ├── app/            # ประกอบด้วย Controller, DTO, Entity, Repository
+├── backend/                # ระบบหลังบ้าน (Golang + Gin)
+│   ├── config/             # การตั้งค่าฐานข้อมูล (Database Connection & Seeding)
+│   ├── internal/           # Business Logic ตามโครงสร้าง Clean Architecture
+│   │   ├── app/            # ส่วนหลัก: Controller, DTO, Entity, Repository
 │   │   ├── middlewares/    # ส่วนจัดการ Request (เช่น CORS)
-│   │   ├── routes/         # ส่วนกำหนดเส้นทาง API (Endpoints)
-│   │   └── service/        # ส่วนจัดการ Logic การทำงาน (Task Service)
-│   ├── Dockerfile          # สำหรับสร้าง Backend Image
-│   ├── main.go             # Entry point ของแอปพลิเคชัน
-│   └── go.mod              # ไฟล์จัดการ dependencies ของ Go
-├── frontend/               # ส่วนของ UI (Node.js/React)
-│   ├── app.js              # โค้ดหลักของ Frontend
-│   ├── Dockerfile          # สำหรับสร้าง Image ของ Frontend
-│   └── package.json        # ไฟล์จัดการ dependencies ของ Node.js
-├── k8s/                    # Kubernetes Manifests
-│   ├── backend/            # Deployment, Service และ Postgres ของหลังบ้าน
-│   ├── frontend/           # Deployment และ Service ของหน้าบ้าน
-│   └── monitoring/         # การตั้งค่า Monitoring สำหรับ K8s
-├── prometheus/             # ไฟล์ตั้งค่าระบบเก็บ Metrics (Prometheus Config)
-├── terraform/              # ไฟล์ Infrastructure as Code (Backend, DB, Ingress)
-├── docker-compose.yml      # สำหรับรันระบบทั้งหมดพร้อมกันในเครื่อง (Local)
-├── Jenkinsfile             # ไฟล์กำหนด Automation Pipeline (CI/CD)
-└── README.md
+│   │   ├── routes/         # กำหนด API Endpoints
+│   │   └── service/        # ส่วนจัดการ Logic การทำงานหลัก (Task Service)
+│   ├── main.go             # จุดเริ่มต้นการทำงานของ Backend API
+│   └── Dockerfile          # สำหรับสร้าง Container Image ของ Backend
+│
+├── frontend/               # ระบบหน้าบ้าน (Node.js/Express)
+│   ├── app.js              # โค้ดหลักแสดงผล UI และทำ Metrics Exporter
+│   └── Dockerfile          # สำหรับสร้าง Container Image ของ Frontend
+│
+├── k8s/                    # Kubernetes Manifests (ใช้สำหรับการ Deploy บน Cluster)
+│   ├── backend/            # ไฟล์ Deploy หลังบ้าน และ Postgres DB
+│   ├── frontend/           # ไฟล์ Deploy หน้าบ้าน
+│   └── monitoring/         # ไฟล์สำหรับตั้งค่า Monitoring บน Kubernetes
+│
+├── prometheus/             # การตั้งค่าระบบ Monitoring
+│   ├── prometheus.yml      # ไฟล์หลักกำหนดเป้าหมาย (Targets) ในการเก็บ Metrics
+│   └── alert_rules.yml     # กำหนดเงื่อนไขการแจ้งเตือน (Alerting Rules)
+│
+├── terraform/              # Infrastructure as Code (IaC)
+│   ├── main.tf             # ไฟล์หลักสำหรับจัดการโครงสร้างพื้นฐาน
+│   └── *.tf                # ไฟล์แยกจัดการส่วน Backend, DB, Frontend และ Ingress
+│
+├── docker-compose.yml      # ไฟล์สำหรับรันระบบทั้งหมดในเครื่อง Local (Development)
+├── Jenkinsfile             # ไฟล์กำหนดขั้นตอน CI/CD Pipeline อัตโนมัติ
+├── .env                    # ไฟล์เก็บค่าตัวแปรสภาพแวดล้อม (Environment Variables)
+└── README.md               # เอกสารอธิบายรายละเอียดโปรเจกต์
 ```
 
 ---
@@ -318,7 +326,7 @@ curl http://localhost:5000/metrics
 ```
 
 ---
-
+[ดาวน์โหลดไฟล์รายละเอียดโปรเจกต์ (PDF)](./Project-ServerlessPDF.pdf)
 ## 📚 เอกสารอ้างอิง
 
 - [Jenkinsfile Declarative Pipeline Syntax](https://www.jenkins.io/doc/book/pipeline/syntax/)
