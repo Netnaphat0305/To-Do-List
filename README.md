@@ -138,11 +138,12 @@ npm start
 ### 3. Build และรันด้วย Docker
 ```bash
 # รันระบบทั้งหมดในโหมด Background
-**สำหรับรันตัวแอปพลิเคชันและฐานข้อมูล (Local Development):**
-หากต้องการรันระบบทั้งหมดรวมถึง PostgreSQL ในเครื่องเพื่อทดสอบฟังก์ชัน:
-```bash
+สำหรับรันตัวแอปพลิเคชันและฐานข้อมูล (Local Development)
+หากต้องการรันระบบทั้งหมดรวมถึง PostgreSQL ในเครื่องเพื่อทดสอบฟังก์ชัน
 # รันระบบทั้งหมดในโหมด Background
 docker-compose up -d --build
+# เริ่มการทำงานของ Jenkins Container
+docker start my-jenkins
 # ตรวจสอบสถานะ Container ที่รันอยู่
 docker ps
 ```
