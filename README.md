@@ -157,7 +157,14 @@ docker build -t [username]/todo-frontend:latest ./frontend
 ```
 
 ---
+##  การสร้างและเตรียมแอปพลิเคชัน: Jenkins และ Docker
 
+• **Jenkins (CI/CD Server):**  เมื่อได้รับ Webhook จะเริ่มทำงานตามขั้นตอนที่เขียนไว้ใน
+  ไฟล์ Jenkinsfile โดยเริ่มจากการไปดึงโค้ดล่าสุดจาก GitHub ลงมา (Checkout)  
+• **Docker:**  Jenkins จะรันคาสั่ง Docker เพื่อนำโค้ด Frontend และ Backend ไป
+แพ็กใส่สิ่งที่เรียกว่า Docker Image (เหมือนการสร้างไฟล์ติดตั้งแอป)  
+• **Docker Hub (Registry):**  เมื่อสร้างและทดสอบ Image เสร็จแล้ว Jenkins จะอัปโหลด
+(Push) Image ทั้งสองตัวนี้ขึ้นไปฝากไว้ที่ Docker Hub เพื่อรอให้ระบบอื่นมาดึงไปใช้งาน
 ## 🔄 CI/CD Pipeline (Jenkins)
 
 ### ลำดับการทำงานของ Pipeline
@@ -192,6 +199,9 @@ Checkout ──▶ Build & Test ──▶ Docker Build ──▶ Test Docker Ima
 ## 🏗️ Infrastructure as Code
 
 ### Terraform — Provision Infrastructure
+**การจัดการโครงสร้างพื้นฐาน: Terraform**  
+- หลังจากอัปโหลด Image เสร็จ Jenkins จะไปเรียกใช้งาน Terraform   
+- Terraform ทำหน้าที่เป็นตัวจัดการ Infrastructure (IaC) โดยมันจะนำค่าตัวแปร เช่น รหัสผ่าน Database และ เลขเวอร์ชันของ Image ล่าสุด ไปสั่งการตั้งค่าบน Kubernetes
 ```bash
 cd terraform
 terraform init      # ดาวน์โหลด provider plugins
@@ -206,6 +216,13 @@ Storage: Persistent Volumes สำหรับฐานข้อมูล Postgr
 Config: Management ของ Environment Variables และ ConfigMaps
 
 ## ☸️ Kubernetes Deployment
+- Kubernetes จะรับคาสั่งจาก Terraform แล้วไปดึง Docker Image เวอร์ชันล่าสุดจาก
+Docker Hub มารันเป็น Pods (ตัวรันแอปพลิเคชันจริง)  
+- ภายใน K8s จะมีการเชื่อมต่อกันคือ: Frontend Pods คุยกับ Backend Pods และ
+Backend Pods คุยกับ Database (PostgreSQL) ผ่านสิ่งที่เรียกว่า Service  
+- Ingress (Nginx) ทำหน้าที่เป็นประตูรับ Request จากผู้ใช้ที่พิมพ์ URL 
+todo.local แล้วส่ง (Route) ทราฟฟิกไปยัง Frontend, Grafana หรือ
+Prometheus ให้ถูกต้อง
 
 ### Apply Manifests ด้วยตัวเอง
 ```bash
@@ -265,14 +282,21 @@ todo-frontend-service   NodePort    10.96.222.234   <none>        80:30005/TCP  
 ## 📊 Monitoring
 
 ### Prometheus — เก็บ Metrics
+- **Prometheus:**  เป็นระบบ Monitoring ที่ถูกติดตั้งอยู่ใน K8s จะคอยวิ่งไปดึงข้อมูล
+(Scrape metrics) จาก Endpoint 
+/metrics ของ Frontend และ Backend ทุกๆ
+15 วินาที เพื่อเก็บสถิติ เช่น มีงานค้างกี่ชิ้น หรือกิน CPU ไปเท่าไหร่
 - ไฟล์ config: `monitoring/prometheus.yml`
 - Scrape ทุก **15 วินาที**
 - Target endpoint: `http://todo.local/metrics`
 ```bash
 # เปิด UI ที่ http://todo.local/prometheus/targets
 ```
-
 ### Grafana — แสดง Dashboard
+ทำหน้าที่เป็นหน้าจอแสดงผล (Dashboard) โดยมันจะไปดึงฐานข้อมูลตัวเลข
+จาก Prometheus มาแปลงเป็นกราฟดูสถานะของระบบได้แบบเรียลไทม์  
+แบ่งข้อมูลที่แสดงออกเป็นทั้งหมด 6 ค่า ดังตาราง Panels ใน Dashboard
+
 - ไฟล์ dashboard: `monitoring/grafana-dashboard.json`
 - Data source: Prometheus (`http://localhost:9090`)
 
