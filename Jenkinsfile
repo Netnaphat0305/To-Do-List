@@ -69,10 +69,7 @@ pipeline {
                 }
                 script {
                     echo "📊 Syncing Monitoring Config..."
-                    // ต้องใส่ --insecure-skip-tls-verify ที่คำสั่ง kubectl ทั้งหน้าและหลังเครื่องหมาย |
                     sh "kubectl --insecure-skip-tls-verify create configmap prometheus-config --from-file=prometheus/prometheus.yml --from-file=prometheus/alert_rules.yml -n todo-app --dry-run=client -o yaml | kubectl --insecure-skip-tls-verify apply -f - --validate=false"
-                    
-                    // ตรงนี้ก็ต้องใส่ด้วยเช่นกัน
                     sh "kubectl --insecure-skip-tls-verify apply -f k8s/monitoring/monitoring.yaml --validate=false"
                 }
                 // ตรวจสอบสถานะการ Deploy โดยข้ามการเช็คใบรับรอง TLS
