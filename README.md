@@ -177,7 +177,6 @@ Checkout ──▶ Build & Test ──▶ Docker Build ──▶ Test Docker Ima
 |-------|----------|
 | **Checkout** | ดึงโค้ดล่าสุดจาก GitHub |
 | **Build & Test** | ติดตั้ง Dependencies ที่จำเป็นและรัน Unit Test เพื่อตรวจสอบความถูกต้องของแอปพลิเคชัน |
-| **Test** | รัน unit test |
 | **Docker Build** | เริ่มกระบวนการสร้าง Docker Images จาก Dockerfile ทั้งส่วน Frontend และ Backend |
 | **Test Docker Images** | ตรวจสอบความสมบูรณ์ของ Docker Images ที่ถูกสร้างขึ้นก่อนนำไปใช้งานจริง |
 | **Push to Docker Hub** | ทำการ Tag และ Push Docker Images ขึ้นไปเก็บไว้ที่ Docker Hub Registry |
@@ -216,11 +215,11 @@ Storage: Persistent Volumes สำหรับฐานข้อมูล Postgr
 Config: Management ของ Environment Variables และ ConfigMaps
 
 ## ☸️ Kubernetes Deployment
-- Kubernetes จะรับคาสั่งจาก Terraform แล้วไปดึง Docker Image เวอร์ชันล่าสุดจาก
+- Kubernetes จะรับคำสั่งจาก Terraform แล้วไปดึง Docker Image เวอร์ชันล่าสุดจาก
 Docker Hub มารันเป็น Pods (ตัวรันแอปพลิเคชันจริง)  
 - ภายใน K8s จะมีการเชื่อมต่อกันคือ: Frontend Pods คุยกับ Backend Pods และ
 Backend Pods คุยกับ Database (PostgreSQL) ผ่านสิ่งที่เรียกว่า Service  
-- Ingress (Nginx) ทำหน้าที่เป็นประตูรับ Request จากผู้ใช้ที่พิมพ์ URL 
+- Ingress ทำหน้าที่เป็นประตูรับ Request จากผู้ใช้ที่พิมพ์ URL 
 todo.local แล้วส่ง (Route) ทราฟฟิกไปยัง Frontend, Grafana หรือ
 Prometheus ให้ถูกต้อง
 
