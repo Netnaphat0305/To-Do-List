@@ -1,3 +1,4 @@
+#สร้าง Backend Pod + Service
 resource "kubernetes_deployment" "todo_backend" {
   metadata {
     name      = "todo-backend"

@@ -1,3 +1,4 @@
+#กำหนดตัวแปร (รับค่าจาก Jenkins)
 variable "image_tag" {
   description = "Docker image tag from Jenkins build number"
   type        = string

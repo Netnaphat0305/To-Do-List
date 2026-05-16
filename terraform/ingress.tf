@@ -1,3 +1,4 @@
+#สร้าง Ingress (Traffic Router)
 resource "kubernetes_ingress_v1" "todo_ingress" {
   metadata {
     name      = "todo-ingress"

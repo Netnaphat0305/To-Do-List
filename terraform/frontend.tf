@@ -1,3 +1,4 @@
+#สร้าง Frontend Pod + Service
 resource "kubernetes_deployment" "todo_frontend" {
   metadata {
     name      = "todo-frontend"

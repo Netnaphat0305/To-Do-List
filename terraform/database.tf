@@ -1,3 +1,4 @@
+#สร้าง Postgres Pod + Service
 resource "kubernetes_service" "postgres_service" {
   metadata {
     name      = "postgres-service"
