@@ -1,3 +1,4 @@
+#บอกว่าจะคุยกับ Kubernetes ยังไง
 terraform {
   # Terraform เซฟความจำไว้ที่นี่ 
   backend "local" {

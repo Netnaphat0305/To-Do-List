@@ -45,7 +45,7 @@
                                                                            │  │  Pod   │  │
              ┌────────────── Monitoring ──────────────┐                    │  │ [App]  │  │
              ▼                                        ▼                    │  └────────┘  │
-        Prometheus <───────── Scrape ────────── Backend Pod ─────────── ───┼──▶ PostgreSQL│
+        Prometheus <───────── Scrape ────────── Backend Pod ────────────── ┼──▶ PostgreSQL│
      (Metrics/Logs)         (/metrics)         (Go Server)                 │   (Database) │
              │                                        │                    │              │
              ▼                                        ▼                    │  ┌────────┐  │
