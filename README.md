@@ -32,20 +32,20 @@
              ▼  git push
           GitHub ────── Webhook ───────▶ Jenkins (CI/CD Pipeline)
                                             │
-    ┌───────────────────────────────────────┴──────────────────────────────────────┐
-    ▼               ▼               ▼               ▼               ▼              ▼
- 1.Checkout ──▶ 2.Build ──▶ 3.Test ──▶ 4.Docker Build ──▶ 5.Push Hub ──▶ 6.Deploy
- (Pull Source)  (Install Deps) (Unit Test)   (Create Image)    (Docker Hub)   (Terraform)
-                                                                    │              │
-                                                                    ▼              ▼
-                                                               Docker Hub ──▶ Kubernetes
+    ┌───────────────────────────────────────┴───────────────────────────────────────────────┐
+    ▼                   ▼                 ▼                ▼                 ▼              ▼
+ 1.Checkout ───▶ 2.Build & Test ──▶ 3.Docker Build ─▶ 4.Test Images ─▶ 5.Push Hub ─▶ 6.Deploy
+ (Pull Source)  (Install Deps)      (Create Image)       (Test image)   (Docker Hub)   (Terraform)
+                                                                             │              │
+                                                                             ▼              ▼
+                                                                         Docker Hub ──▶ Kubernetes
                                                                             (todo-app NS)
                                                                            ┌──────────────┐
                                                                            │  ┌────────┐  │
                                                                            │  │  Pod   │  │
              ┌────────────── Monitoring ──────────────┐                    │  │ [App]  │  │
              ▼                                        ▼                    │  └────────┘  │
-        Prometheus <───────── Scrape ────────── Backend Pod ───────────────┼──▶ PostgreSQL│
+        Prometheus <───────── Scrape ────────── Backend Pod ────────────── ┼──▶ PostgreSQL│
      (Metrics/Logs)         (/metrics)         (Go Server)                 │   (Database) │
              │                                        │                    │              │
              ▼                                        ▼                    │  ┌────────┐  │
